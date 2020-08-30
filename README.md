@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/TimothyNicdao/ics432imgapp.svg?token=ez7pKUGTyqTdtQdZGxYz&branch=master)](https://travis-ci.com/TimothyNicdao/ics432imgapp)
 
 # ics432imgapp
 
