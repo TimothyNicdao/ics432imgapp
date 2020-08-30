@@ -31,7 +31,7 @@ before_cache:
   - rm -f  $HOME/.m2/repository
 
 after_success:
-   - bash <(curl -s https://codecov.io/bash) -t 7847e00f-65e7-423e-8f2c-636d8614aa58
+   - bash <(curl -s https://codecov.io/bash) -t fb74c372-f5b9-41cf-8a66-19d6c53087c1
 
 cache:
   directories:
