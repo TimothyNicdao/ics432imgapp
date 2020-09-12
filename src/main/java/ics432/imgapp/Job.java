@@ -53,11 +53,48 @@ class Job {
     /**
      * Method to execute the imgTransform job
      */
-    void execute() {
+    void execute(JobWindow jobWindow) {
+        // class ImageThread extends Thread { 
+
+        //     public Path inputFile; 
+
+        //     public ImageThread (String s, Path inputFile) { 
+        //       super(s); 
+        //       this.inputFile = inputFile;
+        //     }
+          
+        //     public void run() { 
+        //         try{
+        //             Thread.sleep(7000);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
+        //         }catch(Exception e){
+        //             System.out.println(e);
+        //         }
+    
+        //         //////////////// Remove entire block above !!!!
+        //         System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
+    
+        //         Path outputFile;
+        //         try {
+        //             outputFile = processInputFile(inputFile);
+        //             // Generate a "success" outcome
+        //             this.outcome.add(new ImgTransformOutcome(true, inputFile, outputFile, null));
+        //         } catch (IOException e) {
+        //             // Generate a "failure" outcome
+        //             this.outcome.add(new ImgTransformOutcome(false, inputFile, null, e));
+        //         }
+        //     } 
+        //   }
 
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
 
+            try{
+                Thread.sleep(7000);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
+            }catch(Exception e){
+                System.out.println(e);
+            }
+
+            //////////////// Remove entire block above !!!!
             System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
 
             Path outputFile;

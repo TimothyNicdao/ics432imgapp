@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A class that implements a "Job Window" on which a user
@@ -38,6 +39,8 @@ class JobWindow extends Stage {
     private final Button runButton;
     private final Button closeButton;
     private final ComboBox<ImgTransform> imgTransformList;
+    private final ReentrantLock lock = new ReentrantLock();
+    private int batches;
 
     /**
      * Constructor
@@ -50,6 +53,9 @@ class JobWindow extends Stage {
      * @param inputFiles The batch of input image files
      */
     JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles) {
+        
+        // number of batches of create lobs
+         this.batches = 0; 
 
         // The  preferred height of buttons
         double buttonPreferredHeight = 27.0;
@@ -132,9 +138,24 @@ class JobWindow extends Stage {
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
 
-            executeJob(imgTransformList.getSelectionModel().getSelectedItem());
-
-            this.closeButton.setDisable(false);
+            lock.lock();
+            try {
+                this.batches += 1;
+            }
+            catch(Exception e) {
+                System.out.println(e);
+            }
+            finally {
+                lock.unlock(); 
+            }
+            
+            Runnable myJob = () -> {
+                executeJob(imgTransformList.getSelectionModel().getSelectedItem());
+            };
+            Thread thread1 = new Thread(myJob);
+            thread1.start();
+            
+            // this.closeButton.setDisable(false); will be implemented via a listener 
         });
 
         this.closeButton.setOnAction(f -> this.close());
@@ -205,7 +226,7 @@ class JobWindow extends Stage {
         Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
 
         // Execute it
-        job.execute();
+        job.execute(this);
 
         // Process the outcome
         List<Path> toAddToDisplay = new ArrayList<>();
@@ -230,5 +251,8 @@ class JobWindow extends Stage {
 
         // Update the viewport
         this.flwvp.addFiles(toAddToDisplay);
+
+        // close the window 
+        this.closeButton.setDisable(false);
     }
 }
