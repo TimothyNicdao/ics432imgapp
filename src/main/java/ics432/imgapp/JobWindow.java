@@ -37,6 +37,14 @@ class JobWindow extends Stage {
     private final TextField targetDirTextField;
     private final Button runButton;
     private final Button closeButton;
+    private Label readTimeLabel = new Label("Total Read Time: ");
+    private Label processTimeLabel = new Label("Total Process Time: ");
+    private Label writeTimeLabel = new Label("Total Write Time: ");
+    private Label totalTimeLabel = new Label("Total Execution Time: ");
+    private Label jobReadValue = new Label("");
+    private Label jobProcessValue = new Label("");
+    private Label jobWriteValue = new Label("");
+    private Label jobTotalValue = new Label("");
     private final ComboBox<ImgTransform> imgTransformList;
 
     /**
@@ -90,6 +98,30 @@ class JobWindow extends Stage {
         Label transformLabel = new Label("Transformation: ");
         transformLabel.setPrefWidth(115);
 
+        this.readTimeLabel.setPrefWidth(95);
+        this.readTimeLabel.setVisible(false);
+
+        this.processTimeLabel.setPrefWidth(105);
+        this.processTimeLabel.setVisible(false);
+
+        this.writeTimeLabel.setPrefWidth(105);
+        this.writeTimeLabel.setVisible(false);
+
+        this.totalTimeLabel.setPrefWidth(125);
+        this.totalTimeLabel.setVisible(false);
+
+        this.jobReadValue.setPrefWidth(80);
+        this.jobReadValue.setVisible(false);
+
+        this.jobProcessValue.setPrefWidth(80);
+        this.jobProcessValue.setVisible(false);
+
+        this.jobWriteValue.setPrefWidth(80);
+        this.jobWriteValue.setVisible(false);
+
+        this.jobTotalValue.setPrefWidth(80);
+        this.jobTotalValue.setVisible(false);
+
         //  Create the pulldown list of image transforms
         this.imgTransformList = new ComboBox<>();
         this.imgTransformList.setId("imgTransformList");  // For TestFX
@@ -131,9 +163,15 @@ class JobWindow extends Stage {
             this.changeDirButton.setDisable(true);
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
-
             executeJob(imgTransformList.getSelectionModel().getSelectedItem());
-
+            this.readTimeLabel.setVisible(true);
+            this.jobReadValue.setVisible(true);
+            this.processTimeLabel.setVisible(true);
+            this.jobProcessValue.setVisible(true);
+            this.writeTimeLabel.setVisible(true);
+            this.jobWriteValue.setVisible(true);
+            this.totalTimeLabel.setVisible(true);
+            this.jobTotalValue.setVisible(true);
             this.closeButton.setDisable(false);
         });
 
@@ -160,6 +198,14 @@ class JobWindow extends Stage {
         HBox row3 = new HBox(5);
         row3.getChildren().add(runButton);
         row3.getChildren().add(closeButton);
+        row3.getChildren().add(readTimeLabel);
+        row3.getChildren().add(jobReadValue);
+        row3.getChildren().add(processTimeLabel);
+        row3.getChildren().add(jobProcessValue);
+        row3.getChildren().add(writeTimeLabel);
+        row3.getChildren().add(jobWriteValue);
+        row3.getChildren().add(totalTimeLabel);
+        row3.getChildren().add(jobTotalValue);
         layout.getChildren().add(row3);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
@@ -209,6 +255,19 @@ class JobWindow extends Stage {
 
         // Process the outcome
         List<Path> toAddToDisplay = new ArrayList<>();
+
+        String readText = Long.toString(job.readValue());
+        this.jobReadValue.setText(readText + "ns");
+
+        String processText = Long.toString(job.processValue());
+        this.jobProcessValue.setText(processText + "ns");
+
+        String writeText = Long.toString(job.writeValue());
+        this.jobWriteValue.setText(writeText + "ns");
+
+        String totalText = Long.toString(job.readValue() + job.processValue() + job.writeValue());
+        this.jobTotalValue.setText(totalText + "ns");
+
 
         StringBuilder errorMessage = new StringBuilder();
         for (Job.ImgTransformOutcome o : job.getOutcome()) {

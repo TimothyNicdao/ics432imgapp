@@ -32,6 +32,11 @@ class Job {
     // The list of outcomes for each input file
     private final List<ImgTransformOutcome> outcome;
 
+    // Times for reading, writing, and processing the image(s)
+    private long readTime = 0;
+    private long writeTime = 0;
+    private long processTime = 0;
+
     /**
      * Constructor
      *
@@ -82,6 +87,10 @@ class Job {
         return this.outcome;
     }
 
+    public long readValue() { return readTime; }
+    public long processValue() { return processTime; }
+    public long writeValue() { return writeTime; }
+
     /**
      * Helper method to apply a imgTransform to an input image file
      *
@@ -92,6 +101,7 @@ class Job {
 
         // Load the image from file
         Image image;
+        long readStartTime = System.nanoTime();
         try {
             image = new Image(inputFile.toUri().toURL().toString());
             if (image.isError()) {
@@ -101,11 +111,17 @@ class Job {
         } catch (IOException e) {
             throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString());
         }
+        long readEndTime = System.nanoTime();
+        readTime += readEndTime - readStartTime;
 
         // Process the image
+        long processStartTime = System.nanoTime();
         BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(image, null), null);
+        long processEndTime = System.nanoTime();
+        processTime += processEndTime - processStartTime;
 
         // Write the image back to a file
+        long writeStartTime = System.nanoTime();
         String outputPath = this.targetDir + System.getProperty("file.separator") + this.imgTransform.getName() + "_" + inputFile.getFileName();
         try {
             OutputStream os = new FileOutputStream(new File(outputPath));
@@ -114,6 +130,8 @@ class Job {
         } catch (IOException | NullPointerException e) {
             throw new IOException("Error while writing to " + outputPath);
         }
+        long writeEndTime = System.nanoTime();
+        writeTime += writeEndTime - writeStartTime;
 
         // Success!
         return Paths.get(outputPath);
