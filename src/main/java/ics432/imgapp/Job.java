@@ -53,7 +53,7 @@ class Job {
     /**
      * Method to execute the imgTransform job
      */
-    void execute(JobWindow jobWindow) {
+    void execute(JobWindow window) {
         // class ImageThread extends Thread { 
 
         //     public Path inputFile; 
@@ -101,10 +101,10 @@ class Job {
             try {
                 outputFile = processInputFile(inputFile);
                 // Generate a "success" outcome
-                this.outcome.add(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
             } catch (IOException e) {
                 // Generate a "failure" outcome
-                this.outcome.add(new ImgTransformOutcome(false, inputFile, null, e));
+                window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
             }
         }
     }

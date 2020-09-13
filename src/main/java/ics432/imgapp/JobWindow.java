@@ -142,8 +142,8 @@ class JobWindow extends Stage {
             try {
                 this.batches += 1;
             }
-            catch(Exception e) {
-                System.out.println(e);
+            catch(Exception batcherror) {
+                System.out.println(batcherror);
             }
             finally {
                 lock.unlock(); 
@@ -189,6 +189,7 @@ class JobWindow extends Stage {
         this.setScene(scene);
         this.toFront();
         this.show();
+
     }
 
     /**
@@ -228,16 +229,50 @@ class JobWindow extends Stage {
         // Execute it
         job.execute(this);
 
+        // // Process the outcome  ---- outcome is processed by a listener
+        // List<Path> toAddToDisplay = new ArrayList<>();
+
+        // StringBuilder errorMessage = new StringBuilder();
+        // for (Job.ImgTransformOutcome o : job.getOutcome()) {
+        //     if (o.success) {
+        //         toAddToDisplay.add(o.outputFile);
+        //     } else {
+        //         errorMessage.append(o.inputFile.toAbsolutePath().toString()).append(": ").append(o.error.getMessage()).append("\n");
+        //     }
+        // }
+
+        // // Pop up error dialog if needed
+        // if (!errorMessage.toString().equals("")) {
+        //     Alert alert = new Alert(Alert.AlertType.ERROR);
+        //     alert.setTitle("ImgTransform Job Error");
+        //     alert.setHeaderText(null);
+        //     alert.setContentText(errorMessage.toString());
+        //     alert.showAndWait();
+        // }
+
+        // // Update the viewport
+        // this.flwvp.addFiles(toAddToDisplay);
+
+        // close the window 
+        this.closeButton.setDisable(false);
+    }
+
+    /**
+     * A listener that updates job window when a job finishes
+     *
+     * @param jobOutcome The outcome of a job 
+     */
+    public void displayJob(Job.ImgTransformOutcome imageOutcome){
+
         // Process the outcome
         List<Path> toAddToDisplay = new ArrayList<>();
 
         StringBuilder errorMessage = new StringBuilder();
-        for (Job.ImgTransformOutcome o : job.getOutcome()) {
-            if (o.success) {
-                toAddToDisplay.add(o.outputFile);
-            } else {
-                errorMessage.append(o.inputFile.toAbsolutePath().toString()).append(": ").append(o.error.getMessage()).append("\n");
-            }
+
+        if (imageOutcome.success) {
+            toAddToDisplay.add(imageOutcome.outputFile);
+        } else {
+            errorMessage.append(imageOutcome.inputFile.toAbsolutePath().toString()).append(": ").append(imageOutcome.error.getMessage()).append("\n");
         }
 
         // Pop up error dialog if needed
@@ -252,7 +287,6 @@ class JobWindow extends Stage {
         // Update the viewport
         this.flwvp.addFiles(toAddToDisplay);
 
-        // close the window 
-        this.closeButton.setDisable(false);
     }
+
 }
