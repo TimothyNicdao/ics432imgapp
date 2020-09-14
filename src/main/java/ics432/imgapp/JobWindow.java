@@ -288,7 +288,9 @@ class JobWindow extends Stage {
         // Create a job
         Job job = new Job(imgTransform, this.targetDir, this.inputFiles, this);
 
-        // Execute it
+        
+        // Idea to create thread in JobWindow.java from Timothy Nicdao's code
+        // Execute job in thread
         Thread jobThread = new Thread(new Runnable(){
             public void run(){
                 job.execute();
