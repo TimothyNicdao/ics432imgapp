@@ -85,7 +85,7 @@ class Job {
  
         }
         Platform.runLater(()-> this.jwObject.updateTimes(this));
-        Platform.runLater(()-> this.jwObject.enableCloseButton());
+        Platform.runLater(()-> this.jwObject.jobCompleted());
     }
 
     /**
@@ -98,9 +98,32 @@ class Job {
         return this.outcome;
     }
 
-    public long readValue() { return readTime; }
-    public long processValue() { return processTime; }
-    public long writeValue() { return writeTime; }
+    /**
+     * Getter for readTime
+     *
+     * @return The read time of the job
+     */
+    public long readValue() { 
+        return readTime; 
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public long processValue() { 
+        return processTime; 
+    }
+
+    /**
+     * Getter for writeTime
+     *
+     * @return The write time of the job
+     */
+    public long writeValue() { 
+        return writeTime; 
+    }
 
     /**
      * Helper method to apply a imgTransform to an input image file

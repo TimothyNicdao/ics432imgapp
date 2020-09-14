@@ -165,14 +165,6 @@ class JobWindow extends Stage {
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
             executeJob(imgTransformList.getSelectionModel().getSelectedItem());
-            this.readTimeLabel.setVisible(true);
-            this.jobReadValue.setVisible(true);
-            this.processTimeLabel.setVisible(true);
-            this.jobProcessValue.setVisible(true);
-            this.writeTimeLabel.setVisible(true);
-            this.jobWriteValue.setVisible(true);
-            this.totalTimeLabel.setVisible(true);
-            this.jobTotalValue.setVisible(true);
         });
 
         this.closeButton.setOnAction(f -> this.close());
@@ -249,7 +241,7 @@ class JobWindow extends Stage {
     /**
      * A method to add times
      *
-     * @param filesAdding The files that are being updated
+     * @param givenJob The job whose time is being calculated for
      */
     public void updateTimes(Job givenJob) {
         String readText = Long.toString(givenJob.readValue());
@@ -266,12 +258,20 @@ class JobWindow extends Stage {
     }
 
 /**
-     * A method to add times
+     * A method used after the job is finished to enable the close button and
+     * show the time values
      *
-     * @param filesAdding The files that are being updated
      */
-    public void enableCloseButton() {
+    public void jobCompleted() {
         this.closeButton.setDisable(false);
+        this.readTimeLabel.setVisible(true);
+        this.jobReadValue.setVisible(true);
+        this.processTimeLabel.setVisible(true);
+        this.jobProcessValue.setVisible(true);
+        this.writeTimeLabel.setVisible(true);
+        this.jobWriteValue.setVisible(true);
+        this.totalTimeLabel.setVisible(true);
+        this.jobTotalValue.setVisible(true);
     }
 
     /**
