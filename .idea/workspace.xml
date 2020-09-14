@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="97e271a3-8b5c-48df-b99b-2a582fccb948" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/java/ics432/imgapp/Job.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ics432/imgapp/Job.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ics432/imgapp/JobWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ics432/imgapp/JobWindow.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -43,9 +43,9 @@
     <option name="version" value="2" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="541" y="243" key="FileChooserDialogImpl" timestamp="1598853747612">
+    <state x="541" y="243" key="FileChooserDialogImpl" timestamp="1599985784478">
       <screen x="0" y="0" width="1463" height="864" />
     </state>
-    <state x="541" y="243" key="FileChooserDialogImpl/0.0.1463.864@0.0.1463.864" timestamp="1598853747612" />
+    <state x="541" y="243" key="FileChooserDialogImpl/0.0.1463.864@0.0.1463.864" timestamp="1599985784478" />
   </component>
 </project>

@@ -1,5 +1,6 @@
 package ics432.imgapp;
 
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 
@@ -28,6 +29,7 @@ class Job {
     private final ImgTransform imgTransform;
     private final Path targetDir;
     private final List<Path> inputFiles;
+    private final JobWindow jwObject;
 
     // The list of outcomes for each input file
     private final List<ImgTransformOutcome> outcome;
@@ -43,14 +45,16 @@ class Job {
      * @param imgTransform The imgTransform to apply to input images
      * @param targetDir  The target directory in which to generate output images
      * @param inputFiles The list of input file paths
+     * @param jwObject The list of input file paths
      */
     Job(ImgTransform imgTransform,
         Path targetDir,
-        List<Path> inputFiles) {
+        List<Path> inputFiles, JobWindow jwObject) {
 
         this.imgTransform = imgTransform;
         this.targetDir = targetDir;
         this.inputFiles = inputFiles;
+        this.jwObject = jwObject;
 
         this.outcome = new ArrayList<>();
     }
@@ -60,21 +64,28 @@ class Job {
      */
     void execute() {
 
+
+        List<Path> toAddToDisplay = new ArrayList<>();
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
 
             System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-
             Path outputFile;
             try {
                 outputFile = processInputFile(inputFile);
                 // Generate a "success" outcome
                 this.outcome.add(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                toAddToDisplay.add(outputFile);
+
             } catch (IOException e) {
                 // Generate a "failure" outcome
                 this.outcome.add(new ImgTransformOutcome(false, inputFile, null, e));
             }
+                this.jwObject.updateOutputFileNames(toAddToDisplay);
+ 
         }
+        Platform.runLater(()-> this.jwObject.updateTimes(this));
+        Platform.runLater(()-> this.jwObject.enableCloseButton());
     }
 
     /**

@@ -1,5 +1,6 @@
 package ics432.imgapp;
 
+import javafx.application.Platform;
 import com.jhlabs.image.InvertFilter;
 import com.jhlabs.image.OilFilter;
 import com.jhlabs.image.SolarizeFilter;
@@ -172,7 +173,6 @@ class JobWindow extends Stage {
             this.jobWriteValue.setVisible(true);
             this.totalTimeLabel.setVisible(true);
             this.jobTotalValue.setVisible(true);
-            this.closeButton.setDisable(false);
         });
 
         this.closeButton.setOnAction(f -> this.close());
@@ -238,6 +238,43 @@ class JobWindow extends Stage {
     }
 
     /**
+     * A method to add files to the view port
+     *
+     * @param filesAdding The files that are being updated
+     */
+    public void updateOutputFileNames(List<Path> filesAdding) {
+        this.flwvp.addFiles(filesAdding);
+    }
+
+    /**
+     * A method to add times
+     *
+     * @param filesAdding The files that are being updated
+     */
+    public void updateTimes(Job givenJob) {
+        String readText = Long.toString(givenJob.readValue());
+        this.jobReadValue.setText(readText + "ns");
+
+        String processText = Long.toString(givenJob.processValue());
+        this.jobProcessValue.setText(processText + "ns");
+
+        String writeText = Long.toString(givenJob.readValue());
+        this.jobWriteValue.setText(writeText + "ns");
+
+        String totalText = Long.toString(givenJob.readValue() + givenJob.processValue() + givenJob.writeValue());
+        this.jobTotalValue.setText(totalText + "ns");
+    }
+
+/**
+     * A method to add times
+     *
+     * @param filesAdding The files that are being updated
+     */
+    public void enableCloseButton() {
+        this.closeButton.setDisable(false);
+    }
+
+    /**
      * A method to execute the job
      *
      * @param imgTransform The imgTransform to apply to input images
@@ -247,32 +284,26 @@ class JobWindow extends Stage {
         // Clear the display
         this.flwvp.clear();
 
+        System.out.println(this.getClass());
         // Create a job
-        Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
+        Job job = new Job(imgTransform, this.targetDir, this.inputFiles, this);
 
         // Execute it
-        job.execute();
-
+        Thread jobThread = new Thread(new Runnable(){
+            public void run(){
+                job.execute();
+            }
+        });
+        jobThread.start(); 
+        
         // Process the outcome
         List<Path> toAddToDisplay = new ArrayList<>();
-
-        String readText = Long.toString(job.readValue());
-        this.jobReadValue.setText(readText + "ns");
-
-        String processText = Long.toString(job.processValue());
-        this.jobProcessValue.setText(processText + "ns");
-
-        String writeText = Long.toString(job.writeValue());
-        this.jobWriteValue.setText(writeText + "ns");
-
-        String totalText = Long.toString(job.readValue() + job.processValue() + job.writeValue());
-        this.jobTotalValue.setText(totalText + "ns");
-
 
         StringBuilder errorMessage = new StringBuilder();
         for (Job.ImgTransformOutcome o : job.getOutcome()) {
             if (o.success) {
                 toAddToDisplay.add(o.outputFile);
+            
             } else {
                 errorMessage.append(o.inputFile.toAbsolutePath().toString()).append(": ").append(o.error.getMessage()).append("\n");
             }
@@ -286,8 +317,6 @@ class JobWindow extends Stage {
             alert.setContentText(errorMessage.toString());
             alert.showAndWait();
         }
-
-        // Update the viewport
-        this.flwvp.addFiles(toAddToDisplay);
+        
     }
 }
