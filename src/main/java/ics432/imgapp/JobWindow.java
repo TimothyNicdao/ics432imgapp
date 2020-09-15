@@ -281,10 +281,10 @@ class JobWindow extends Stage {
           String totalText = Long.toString(givenJob.readValue() + givenJob.processValue() + givenJob.writeValue());
           this.jobTotalValue.setText(totalText + "ns");
         } else {
-          this.jobReadValue.setText("Canceled");
-          this.jobProcessValue.setText("Canceled");
-          this.jobWriteValue.setText("Canceled");
-          this.jobTotalValue.setText("Canceled");
+          this.jobReadValue.setText("CANCELED");
+          this.jobProcessValue.setText("CANCELED");
+          this.jobWriteValue.setText("CANCELED");
+          this.jobTotalValue.setText("CANCELED");
         }
 
     }
