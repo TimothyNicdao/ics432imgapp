@@ -4,6 +4,7 @@ import com.jhlabs.image.InvertFilter;
 import com.jhlabs.image.OilFilter;
 import com.jhlabs.image.SolarizeFilter;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -38,8 +39,10 @@ class JobWindow extends Stage {
     private final TextField targetDirTextField;
     private final Button runButton;
     private final Button closeButton;
-    private final Button extraButton;
     private final ComboBox<ImgTransform> imgTransformList;
+    private final ObservableList<String> examples;
+    private final ListView<String> examplesView;
+    private long totalTime;
 
     /**
      * Constructor
@@ -141,10 +144,10 @@ class JobWindow extends Stage {
 
         this.closeButton.setOnAction(f -> this.close());
 
-        this.extraButton = new Button("Example");
-        this.extraButton.setId("extraButton");
-        this.extraButton.setPrefHeight(buttonPreferredHeight);
-
+        this.examples = FXCollections.observableArrayList();
+        this.examplesView = new ListView<>(examples);
+        this.examplesView.setPrefWidth(windowWidth * 0.61);
+        this.examplesView.setMaxWidth(windowWidth * 0.61);
         // Build the scene
         VBox layout = new VBox(5);
 
@@ -166,8 +169,8 @@ class JobWindow extends Stage {
         HBox row3 = new HBox(5);
         row3.getChildren().add(runButton);
         row3.getChildren().add(closeButton);
-        row3.getChildren().add(extraButton);
-        row3.setMargin(extraButton, new Insets(0, 0, 0, 240));
+        row3.getChildren().add(examplesView);
+        row3.setMargin(examplesView, new Insets(0, 0, 0, 150));
 
         layout.getChildren().add(row3);
 
@@ -223,6 +226,13 @@ class JobWindow extends Stage {
         for (Job.ImgTransformOutcome o : job.getOutcome()) {
             if (o.success) {
                 toAddToDisplay.add(o.outputFile);
+                System.err.println(o.outputFile + "Time...." + " Read time: " + o.readTime + " | " + " Write time: " + o.writeTime + " | " + " Process time: " + o.processTime);
+                totalTime = o.readTime + o.writeTime + o.processTime;
+
+                this.examples.add("Path: " + o.outputFile + " Read: " + (o.readTime) + " Write: " + (o.writeTime) + " Process: " + (o.processTime) + " Total: " + totalTime);
+                examplesView.setItems(examples);
+
+
             } else {
                 errorMessage.append(o.inputFile.toAbsolutePath().toString()).append(": ").append(o.error.getMessage()).append("\n");
             }

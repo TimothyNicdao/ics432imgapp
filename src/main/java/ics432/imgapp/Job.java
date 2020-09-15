@@ -32,6 +32,9 @@ class Job {
     // The list of outcomes for each input file
     private final List<ImgTransformOutcome> outcome;
 
+    private long rTime;
+    private long wTime;
+    private long pTime;
     /**
      * Constructor
      *
@@ -57,17 +60,16 @@ class Job {
 
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
-
             System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
 
             Path outputFile;
             try {
                 outputFile = processInputFile(inputFile);
                 // Generate a "success" outcome
-                this.outcome.add(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                this.outcome.add(new ImgTransformOutcome(true, inputFile, outputFile, rTime, wTime, pTime, null));
             } catch (IOException e) {
                 // Generate a "failure" outcome
-                this.outcome.add(new ImgTransformOutcome(false, inputFile, null, e));
+                this.outcome.add(new ImgTransformOutcome(false, inputFile, null, rTime, wTime, pTime,  e));
             }
         }
     }
@@ -104,13 +106,11 @@ class Job {
             throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString());
         }
         long endTime = System.currentTimeMillis();
-        System.err.println("Reading time: " + (endTime - startTime));
 
         // Process the image
         long startTime2 = System.currentTimeMillis();
         BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(image, null), null);
         long endTime2 = System.currentTimeMillis();
-        System.err.println("Processing time: " + (endTime2 - startTime2));
 
         // Write the image back to a file
         long startTime3 = System.currentTimeMillis();
@@ -123,7 +123,12 @@ class Job {
             throw new IOException("Error while writing to " + outputPath);
         }
         long endTime3 = System.currentTimeMillis();
-        System.err.println("Writing time: " + (endTime3 - startTime3));
+
+        rTime = endTime - startTime;
+        pTime = endTime2 - startTime2;
+        wTime = endTime3 - startTime3;
+
+        //System.err.println(outputPath);
 
         // Success!
         return Paths.get(outputPath);
@@ -141,6 +146,9 @@ class Job {
         // The output file path (or null if failure)
         final Path outputFile;
         // The exception that was raised (or null if success)
+        final long readTime;
+        final long writeTime;
+        final long processTime;
         final Exception error;
 
         /**
@@ -151,10 +159,13 @@ class Job {
          * @param output_file The output file path  (null if success is false)
          * @param error       The exception raised (null if success is true)
          */
-        ImgTransformOutcome(boolean success, Path input_file, Path output_file, Exception error) {
+        ImgTransformOutcome(boolean success, Path input_file, Path output_file, long readTime, long writeTime, long processTime, Exception error) {
             this.success = success;
             this.inputFile = input_file;
             this.outputFile = output_file;
+            this.readTime = readTime;
+            this.writeTime = writeTime;
+            this.processTime = processTime;
             this.error = error;
         }
     }
