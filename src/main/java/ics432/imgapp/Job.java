@@ -92,6 +92,8 @@ class Job {
 
         // Load the image from file
         Image image;
+
+        long startTime = System.currentTimeMillis();
         try {
             image = new Image(inputFile.toUri().toURL().toString());
             if (image.isError()) {
@@ -101,11 +103,17 @@ class Job {
         } catch (IOException e) {
             throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString());
         }
+        long endTime = System.currentTimeMillis();
+        System.err.println("Reading time: " + (endTime - startTime));
 
         // Process the image
+        long startTime2 = System.currentTimeMillis();
         BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(image, null), null);
+        long endTime2 = System.currentTimeMillis();
+        System.err.println("Processing time: " + (endTime2 - startTime2));
 
         // Write the image back to a file
+        long startTime3 = System.currentTimeMillis();
         String outputPath = this.targetDir + System.getProperty("file.separator") + this.imgTransform.getName() + "_" + inputFile.getFileName();
         try {
             OutputStream os = new FileOutputStream(new File(outputPath));
@@ -114,6 +122,8 @@ class Job {
         } catch (IOException | NullPointerException e) {
             throw new IOException("Error while writing to " + outputPath);
         }
+        long endTime3 = System.currentTimeMillis();
+        System.err.println("Writing time: " + (endTime3 - startTime3));
 
         // Success!
         return Paths.get(outputPath);

@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.geometry.Insets;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ class JobWindow extends Stage {
     private final TextField targetDirTextField;
     private final Button runButton;
     private final Button closeButton;
+    private final Button extraButton;
     private final ComboBox<ImgTransform> imgTransformList;
 
     /**
@@ -139,6 +141,10 @@ class JobWindow extends Stage {
 
         this.closeButton.setOnAction(f -> this.close());
 
+        this.extraButton = new Button("Example");
+        this.extraButton.setId("extraButton");
+        this.extraButton.setPrefHeight(buttonPreferredHeight);
+
         // Build the scene
         VBox layout = new VBox(5);
 
@@ -160,6 +166,9 @@ class JobWindow extends Stage {
         HBox row3 = new HBox(5);
         row3.getChildren().add(runButton);
         row3.getChildren().add(closeButton);
+        row3.getChildren().add(extraButton);
+        row3.setMargin(extraButton, new Insets(0, 0, 0, 240));
+
         layout.getChildren().add(row3);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
