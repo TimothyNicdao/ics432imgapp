@@ -48,6 +48,8 @@ class JobWindow extends Stage {
     private Label jobWriteValue = new Label("");
     private Label jobTotalValue = new Label("");
     private final ComboBox<ImgTransform> imgTransformList;
+    private volatile boolean jobCanceled = false;
+    private Thread jobThread;
 
     /**
      * Constructor
@@ -176,6 +178,7 @@ class JobWindow extends Stage {
         });
 
         this.closeButton.setOnAction(f -> this.close());
+        this.cancelButton.setOnAction(f -> this.jobCanceled = true);
         // Build the scene
         VBox layout = new VBox(5);
 
@@ -230,6 +233,15 @@ class JobWindow extends Stage {
     }
 
     /**
+     * Method to cancel the job
+     *
+     * @param listener The listener method
+     */
+    public boolean cancelJobCheck() {
+      return this.jobCanceled;
+     }
+
+    /**
      * Method to set the target directory
      *
      * @param dir A directory
@@ -256,17 +268,25 @@ class JobWindow extends Stage {
      * @param givenJob The job whose time is being calculated for
      */
     public void updateTimes(Job givenJob) {
-        String readText = Long.toString(givenJob.readValue());
-        this.jobReadValue.setText(readText + "ns");
+        if (this.jobCanceled == false) {
+          String readText = Long.toString(givenJob.readValue());
+          this.jobReadValue.setText(readText + "ns");
 
-        String processText = Long.toString(givenJob.processValue());
-        this.jobProcessValue.setText(processText + "ns");
+          String processText = Long.toString(givenJob.processValue());
+          this.jobProcessValue.setText(processText + "ns");
 
-        String writeText = Long.toString(givenJob.readValue());
-        this.jobWriteValue.setText(writeText + "ns");
+          String writeText = Long.toString(givenJob.readValue());
+          this.jobWriteValue.setText(writeText + "ns");
 
-        String totalText = Long.toString(givenJob.readValue() + givenJob.processValue() + givenJob.writeValue());
-        this.jobTotalValue.setText(totalText + "ns");
+          String totalText = Long.toString(givenJob.readValue() + givenJob.processValue() + givenJob.writeValue());
+          this.jobTotalValue.setText(totalText + "ns");
+        } else {
+          this.jobReadValue.setText("Canceled");
+          this.jobProcessValue.setText("Canceled");
+          this.jobWriteValue.setText("Canceled");
+          this.jobTotalValue.setText("Canceled");
+        }
+
     }
 
 /**
@@ -305,7 +325,7 @@ class JobWindow extends Stage {
         
         // Idea to create thread in JobWindow.java from Timothy Nicdao's code
         // Execute job in thread
-        Thread jobThread = new Thread(new Runnable(){
+        jobThread = new Thread(new Runnable(){
             public void run(){
                 job.execute();
             }

@@ -69,6 +69,9 @@ class Job {
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
 
+            if (this.jwObject.cancelJobCheck() == true) {
+              break;
+            }
             System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
             Path outputFile;
             try {
