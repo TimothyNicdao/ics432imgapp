@@ -38,6 +38,7 @@ class JobWindow extends Stage {
     private final TextField targetDirTextField;
     private final Button runButton;
     private final Button closeButton;
+    private final Button cancelButton;
     private Label readTimeLabel = new Label("Total Read Time: ");
     private Label processTimeLabel = new Label("Total Process Time: ");
     private Label writeTimeLabel = new Label("Total Write Time: ");
@@ -151,6 +152,12 @@ class JobWindow extends Stage {
         this.closeButton.setId("closeButton");
         this.closeButton.setPrefHeight(buttonPreferredHeight);
 
+        // Create a "Cancel" button
+        this.cancelButton = new Button("Cancel");
+        this.cancelButton.setId("cancelButton");
+        this.cancelButton.setPrefHeight(buttonPreferredHeight);
+        this.cancelButton.setVisible(false);
+
         // Set actions for all widgets
         this.changeDirButton.setOnAction(e -> {
             DirectoryChooser dirChooser = new DirectoryChooser();
@@ -161,6 +168,7 @@ class JobWindow extends Stage {
 
         this.runButton.setOnAction(e -> {
             this.closeButton.setDisable(true);
+            this.cancelButton.setVisible(true);
             this.changeDirButton.setDisable(true);
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
@@ -168,7 +176,6 @@ class JobWindow extends Stage {
         });
 
         this.closeButton.setOnAction(f -> this.close());
-
         // Build the scene
         VBox layout = new VBox(5);
 
@@ -190,15 +197,20 @@ class JobWindow extends Stage {
         HBox row3 = new HBox(5);
         row3.getChildren().add(runButton);
         row3.getChildren().add(closeButton);
-        row3.getChildren().add(readTimeLabel);
-        row3.getChildren().add(jobReadValue);
-        row3.getChildren().add(processTimeLabel);
-        row3.getChildren().add(jobProcessValue);
-        row3.getChildren().add(writeTimeLabel);
-        row3.getChildren().add(jobWriteValue);
-        row3.getChildren().add(totalTimeLabel);
-        row3.getChildren().add(jobTotalValue);
+        row3.getChildren().add(cancelButton);
         layout.getChildren().add(row3);
+
+        HBox row4 = new HBox(5);
+        row4.getChildren().add(readTimeLabel);
+        row4.getChildren().add(jobReadValue);
+        row4.getChildren().add(processTimeLabel);
+        row4.getChildren().add(jobProcessValue);
+        row4.getChildren().add(writeTimeLabel);
+        row4.getChildren().add(jobWriteValue);
+        row4.getChildren().add(totalTimeLabel);
+        row4.getChildren().add(jobTotalValue);
+
+        layout.getChildren().add(row4);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
 
@@ -272,6 +284,8 @@ class JobWindow extends Stage {
         this.jobWriteValue.setVisible(true);
         this.totalTimeLabel.setVisible(true);
         this.jobTotalValue.setVisible(true);
+        this.cancelButton.setVisible(false);
+        this.cancelButton.setDisable(true);
     }
 
     /**
