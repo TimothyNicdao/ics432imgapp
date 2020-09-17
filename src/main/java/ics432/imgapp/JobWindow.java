@@ -206,6 +206,7 @@ class JobWindow extends Stage {
 
     public class MyThread extends Thread {
 
+      @Override
       public void run() {
         a.execute();
       }
