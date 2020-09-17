@@ -89,7 +89,7 @@ class Job {
         for (Path inputFile : inputFiles) {
 
             try{
-                Thread.sleep(7000);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
+                Thread.sleep(500);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
             }catch(Exception e){
                 System.out.println(e);
             }
