@@ -307,10 +307,9 @@ class JobWindow extends Stage {
 
         if (imageOutcome.success) {
             toAddToDisplay.add(imageOutcome.outputFile);
-        }else if(imageOutcome.success && imageOutcome.error == null){
+        }else if(!imageOutcome.success && imageOutcome.error == null){
             errorMessage.append(imageOutcome.inputFile.toAbsolutePath().toString()).append(": ").append("Cancelled").append("\n");
-        } 
-        else {
+        }else {
             errorMessage.append(imageOutcome.inputFile.toAbsolutePath().toString()).append(": ").append(imageOutcome.error.getMessage()).append("\n");
         }
 
