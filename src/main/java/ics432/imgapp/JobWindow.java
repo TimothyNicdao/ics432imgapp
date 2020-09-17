@@ -114,16 +114,16 @@ class JobWindow extends Stage {
         this.totalTimeLabel.setPrefWidth(125);
         this.totalTimeLabel.setVisible(false);
 
-        this.jobReadValue.setPrefWidth(80);
+        this.jobReadValue.setPrefWidth(100);
         this.jobReadValue.setVisible(false);
 
-        this.jobProcessValue.setPrefWidth(80);
+        this.jobProcessValue.setPrefWidth(100);
         this.jobProcessValue.setVisible(false);
 
-        this.jobWriteValue.setPrefWidth(80);
+        this.jobWriteValue.setPrefWidth(100);
         this.jobWriteValue.setVisible(false);
 
-        this.jobTotalValue.setPrefWidth(80);
+        this.jobTotalValue.setPrefWidth(100);
         this.jobTotalValue.setVisible(false);
 
         //  Create the pulldown list of image transforms
@@ -331,19 +331,8 @@ class JobWindow extends Stage {
             }
         });
         jobThread.start(); 
-        
-        // Process the outcome
-        List<Path> toAddToDisplay = new ArrayList<>();
 
         StringBuilder errorMessage = new StringBuilder();
-        for (Job.ImgTransformOutcome o : job.getOutcome()) {
-            if (o.success) {
-                toAddToDisplay.add(o.outputFile);
-            
-            } else {
-                errorMessage.append(o.inputFile.toAbsolutePath().toString()).append(": ").append(o.error.getMessage()).append("\n");
-            }
-        }
 
         // Pop up error dialog if needed
         if (!errorMessage.toString().equals("")) {
