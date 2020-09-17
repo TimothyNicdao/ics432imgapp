@@ -1,5 +1,6 @@
 package ics432.imgapp;
 
+import javafx.application.Platform;
 import com.jhlabs.image.InvertFilter;
 import com.jhlabs.image.OilFilter;
 import com.jhlabs.image.SolarizeFilter;
@@ -137,6 +138,7 @@ class JobWindow extends Stage {
         this.cancelButton = new Button("Cancel");
         this.cancelButton.setId("cancelButton");
         this.cancelButton.setPrefHeight(buttonPreferredHeight);
+        this.cancelButton.setDisable(true);
 
         // Set actions for all widgets
         this.changeDirButton.setOnAction(e -> {
@@ -151,6 +153,7 @@ class JobWindow extends Stage {
             this.changeDirButton.setDisable(true);
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
+            this.cancelButton.setDisable(false);
           
             Runnable myJob = () -> {
                 executeJob(imgTransformList.getSelectionModel().getSelectedItem());
@@ -291,6 +294,8 @@ class JobWindow extends Stage {
 
         // close the window 
         this.closeButton.setDisable(false);
+
+        this.cancelButton.setDisable(true);
     }
 
     /**
@@ -315,11 +320,15 @@ class JobWindow extends Stage {
 
         // Pop up error dialog if needed
         if (!errorMessage.toString().equals("")) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("ImgTransform Job Error or the job was cancelled");
-            alert.setHeaderText(null);
-            alert.setContentText(errorMessage.toString());
-            alert.showAndWait();
+
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("ImgTransform Job Error or the job was cancelled");
+                alert.setHeaderText(null);
+                alert.setContentText(errorMessage.toString());
+                alert.showAndWait();
+            });
+
         }
 
         // Update the viewport
