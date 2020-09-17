@@ -43,6 +43,7 @@ class JobWindow extends Stage {
     private final ObservableList<String> examples;
     private final ListView<String> examplesView;
     private long totalTime;
+    private Job a;
 
     /**
      * Constructor
@@ -203,6 +204,13 @@ class JobWindow extends Stage {
         }
     }
 
+    public class MyThread extends Thread {
+
+      public void run() {
+        a.execute();
+      }
+    }
+
     /**
      * A method to execute the job
      *
@@ -215,15 +223,23 @@ class JobWindow extends Stage {
 
         // Create a job
         Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
+        a = job;
+        MyThread t = new MyThread();
+        t.start();
 
         // Execute it
-        job.execute();
 
         // Process the outcome
         List<Path> toAddToDisplay = new ArrayList<>();
 
         StringBuilder errorMessage = new StringBuilder();
+
+        try{
+          t.join();
+        }catch (InterruptedException e){}
+
         for (Job.ImgTransformOutcome o : job.getOutcome()) {
+          System.err.println(job.getOutcome().size());
             if (o.success) {
                 toAddToDisplay.add(o.outputFile);
                 System.err.println(o.outputFile + "Time...." + " Read time: " + o.readTime + " | " + " Write time: " + o.writeTime + " | " + " Process time: " + o.processTime);
