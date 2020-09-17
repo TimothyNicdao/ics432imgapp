@@ -88,23 +88,28 @@ class Job {
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
 
-            try{
-                Thread.sleep(500);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
-            }catch(Exception e){
-                System.out.println(e);
-            }
-
-            //////////////// Remove entire block above !!!!
-            System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-
-            Path outputFile;
-            try {
-                outputFile = processInputFile(inputFile);
-                // Generate a "success" outcome
-                window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
-            } catch (IOException e) {
-                // Generate a "failure" outcome
-                window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
+            if(!window.isCancelled())
+            {
+                try{
+                    Thread.sleep(1000);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
+                }catch(Exception e){
+                    System.out.println(e);
+                }
+    
+                System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
+    
+                Path outputFile;
+                try {
+                    outputFile = processInputFile(inputFile);
+                    // Generate a "success" outcome
+                    window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                } catch (IOException e) {
+                    // Generate a "failure" outcome
+                    window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
+                }
+            }else{
+                // cancelled if not success and no exception
+                window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
             }
         }
     }

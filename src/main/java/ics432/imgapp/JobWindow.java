@@ -38,9 +38,10 @@ class JobWindow extends Stage {
     private final TextField targetDirTextField;
     private final Button runButton;
     private final Button closeButton;
+    private final Button cancelButton;
     private final ComboBox<ImgTransform> imgTransformList;
     private final ReentrantLock lock = new ReentrantLock();
-    private int batches;
+    private boolean shouldCancel;
 
     /**
      * Constructor
@@ -53,9 +54,17 @@ class JobWindow extends Stage {
      * @param inputFiles The batch of input image files
      */
     JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles) {
-        
-        // number of batches of create lobs
-         this.batches = 0; 
+        // Keep track of wether the jobs were cancelled via the cancel button 
+        lock.lock();
+        try {
+            this.shouldCancel = false;
+        }
+        catch(Exception batcherror) {
+            System.out.println(batcherror);
+        }
+        finally {
+            lock.unlock(); 
+        }
 
         // The  preferred height of buttons
         double buttonPreferredHeight = 27.0;
@@ -124,6 +133,11 @@ class JobWindow extends Stage {
         this.closeButton.setId("closeButton");
         this.closeButton.setPrefHeight(buttonPreferredHeight);
 
+        // Create a "cancel" button
+        this.cancelButton = new Button("Cancel");
+        this.cancelButton.setId("cancelButton");
+        this.cancelButton.setPrefHeight(buttonPreferredHeight);
+
         // Set actions for all widgets
         this.changeDirButton.setOnAction(e -> {
             DirectoryChooser dirChooser = new DirectoryChooser();
@@ -137,18 +151,7 @@ class JobWindow extends Stage {
             this.changeDirButton.setDisable(true);
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
-
-            lock.lock();
-            try {
-                this.batches += 1;
-            }
-            catch(Exception batcherror) {
-                System.out.println(batcherror);
-            }
-            finally {
-                lock.unlock(); 
-            }
-            
+          
             Runnable myJob = () -> {
                 executeJob(imgTransformList.getSelectionModel().getSelectedItem());
             };
@@ -159,6 +162,8 @@ class JobWindow extends Stage {
         });
 
         this.closeButton.setOnAction(f -> this.close());
+        
+        this.cancelButton.setOnAction(f -> this.cancel());
 
         // Build the scene
         VBox layout = new VBox(5);
@@ -180,6 +185,7 @@ class JobWindow extends Stage {
 
         HBox row3 = new HBox(5);
         row3.getChildren().add(runButton);
+        row3.getChildren().add(cancelButton);
         row3.getChildren().add(closeButton);
         layout.getChildren().add(row3);
 
@@ -199,6 +205,36 @@ class JobWindow extends Stage {
      */
     public void addCloseListener(Runnable listener) {
         this.addEventHandler(WindowEvent.WINDOW_HIDDEN, (event) -> listener.run());
+    }
+
+    /**
+     * Method to add a listener for the cancel button
+     *
+     * @param listener The listener method
+     */
+    public void cancel() {
+
+        lock.lock();
+        try {
+            this.shouldCancel = true; 
+            this.runButton.setDisable(true);
+        }
+        catch(Exception batcherror) {
+            System.out.println(batcherror);
+        }
+        finally {
+            lock.unlock(); 
+        }
+    }
+
+
+    /**
+     * Method to add a listener for the cancel button
+     *
+     * @param listener The listener method
+     */
+    public boolean isCancelled() {
+        return this.shouldCancel;
     }
 
     /**
@@ -271,14 +307,17 @@ class JobWindow extends Stage {
 
         if (imageOutcome.success) {
             toAddToDisplay.add(imageOutcome.outputFile);
-        } else {
+        }else if(imageOutcome.success && imageOutcome.error == null){
+            errorMessage.append(imageOutcome.inputFile.toAbsolutePath().toString()).append(": ").append("Cancelled").append("\n");
+        } 
+        else {
             errorMessage.append(imageOutcome.inputFile.toAbsolutePath().toString()).append(": ").append(imageOutcome.error.getMessage()).append("\n");
         }
 
         // Pop up error dialog if needed
         if (!errorMessage.toString().equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("ImgTransform Job Error");
+            alert.setTitle("ImgTransform Job Error or the job was cancelled");
             alert.setHeaderText(null);
             alert.setContentText(errorMessage.toString());
             alert.showAndWait();
