@@ -47,7 +47,7 @@ class JobTest {
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
         Platform.runLater(()-> {
-            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+            volatile JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
 
         waitForRunLater();
@@ -96,7 +96,7 @@ class JobTest {
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
         Platform.runLater(()-> {
-            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+            volatile JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
         
         waitForRunLater();
@@ -132,7 +132,7 @@ class JobTest {
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
         Platform.runLater(()-> {
-            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+            volatile JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
 
         waitForRunLater(); 
