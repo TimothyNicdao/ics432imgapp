@@ -1,5 +1,6 @@
 package ics432.imgapp;
 
+import javafx.application.Platform;
 import com.jhlabs.image.InvertFilter;
 import com.jhlabs.image.OilFilter;
 import com.jhlabs.image.SolarizeFilter;
@@ -22,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A class that implements a "Job Window" on which a user
@@ -37,7 +39,18 @@ class JobWindow extends Stage {
     private final TextField targetDirTextField;
     private final Button runButton;
     private final Button closeButton;
+    private final Button cancelButton;
+    private Label readTimeLabel = new Label("Total Read Time: ");
+    private Label processTimeLabel = new Label("Total Process Time: ");
+    private Label writeTimeLabel = new Label("Total Write Time: ");
+    private Label totalTimeLabel = new Label("Total Execution Time: ");
+    private Label jobReadValue = new Label("");
+    private Label jobProcessValue = new Label("");
+    private Label jobWriteValue = new Label("");
+    private Label jobTotalValue = new Label("");
     private final ComboBox<ImgTransform> imgTransformList;
+    private final ReentrantLock lock = new ReentrantLock();
+    private boolean shouldCancel;
 
     /**
      * Constructor
@@ -50,6 +63,17 @@ class JobWindow extends Stage {
      * @param inputFiles The batch of input image files
      */
     JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles) {
+        // Keep track of wether the jobs were cancelled via the cancel button 
+        lock.lock();
+        try {
+            this.shouldCancel = false;
+        }
+        catch(Exception batcherror) {
+            System.out.println(batcherror);
+        }
+        finally {
+            lock.unlock(); 
+        }
 
         // The  preferred height of buttons
         double buttonPreferredHeight = 27.0;
@@ -90,6 +114,30 @@ class JobWindow extends Stage {
         Label transformLabel = new Label("Transformation: ");
         transformLabel.setPrefWidth(115);
 
+        this.readTimeLabel.setPrefWidth(95);
+        this.readTimeLabel.setVisible(false);
+
+        this.processTimeLabel.setPrefWidth(105);
+        this.processTimeLabel.setVisible(false);
+
+        this.writeTimeLabel.setPrefWidth(105);
+        this.writeTimeLabel.setVisible(false);
+
+        this.totalTimeLabel.setPrefWidth(125);
+        this.totalTimeLabel.setVisible(false);
+
+        this.jobReadValue.setPrefWidth(100);
+        this.jobReadValue.setVisible(false);
+
+        this.jobProcessValue.setPrefWidth(100);
+        this.jobProcessValue.setVisible(false);
+
+        this.jobWriteValue.setPrefWidth(100);
+        this.jobWriteValue.setVisible(false);
+
+        this.jobTotalValue.setPrefWidth(100);
+        this.jobTotalValue.setVisible(false);
+
         //  Create the pulldown list of image transforms
         this.imgTransformList = new ComboBox<>();
         this.imgTransformList.setId("imgTransformList");  // For TestFX
@@ -118,6 +166,13 @@ class JobWindow extends Stage {
         this.closeButton.setId("closeButton");
         this.closeButton.setPrefHeight(buttonPreferredHeight);
 
+        // Create a "cancel" button
+        this.cancelButton = new Button("Cancel");
+        this.cancelButton.setId("cancelButton");
+        this.cancelButton.setPrefHeight(buttonPreferredHeight);
+        this.cancelButton.setVisible(false);
+        this.cancelButton.setDisable(true);
+
         // Set actions for all widgets
         this.changeDirButton.setOnAction(e -> {
             DirectoryChooser dirChooser = new DirectoryChooser();
@@ -131,13 +186,21 @@ class JobWindow extends Stage {
             this.changeDirButton.setDisable(true);
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
-
-            executeJob(imgTransformList.getSelectionModel().getSelectedItem());
-
-            this.closeButton.setDisable(false);
+            this.cancelButton.setVisible(true);
+            this.cancelButton.setDisable(false);
+          
+            Runnable myJob = () -> {
+                executeJob(imgTransformList.getSelectionModel().getSelectedItem());
+            };
+            Thread thread1 = new Thread(myJob);
+            thread1.start();
+            
+            // this.closeButton.setDisable(false); will be implemented via a listener 
         });
 
         this.closeButton.setOnAction(f -> this.close());
+        
+        this.cancelButton.setOnAction(f -> this.cancel());
 
         // Build the scene
         VBox layout = new VBox(5);
@@ -160,7 +223,20 @@ class JobWindow extends Stage {
         HBox row3 = new HBox(5);
         row3.getChildren().add(runButton);
         row3.getChildren().add(closeButton);
+        row3.getChildren().add(cancelButton);
         layout.getChildren().add(row3);
+
+        HBox row4 = new HBox(5);
+        row4.getChildren().add(readTimeLabel);
+        row4.getChildren().add(jobReadValue);
+        row4.getChildren().add(processTimeLabel);
+        row4.getChildren().add(jobProcessValue);
+        row4.getChildren().add(writeTimeLabel);
+        row4.getChildren().add(jobWriteValue);
+        row4.getChildren().add(totalTimeLabel);
+        row4.getChildren().add(jobTotalValue);
+
+        layout.getChildren().add(row4);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
 
@@ -168,6 +244,7 @@ class JobWindow extends Stage {
         this.setScene(scene);
         this.toFront();
         this.show();
+
     }
 
     /**
@@ -180,6 +257,36 @@ class JobWindow extends Stage {
     }
 
     /**
+     * Method to add a listener for the cancel button
+     *
+     * @param listener The listener method
+     */
+    public void cancel() {
+
+        lock.lock();
+        try {
+            this.shouldCancel = true; 
+            this.runButton.setDisable(true);
+        }
+        catch(Exception batcherror) {
+            System.out.println(batcherror);
+        }
+        finally {
+            lock.unlock(); 
+        }
+    }
+
+
+    /**
+     * Method to add a listener for the cancel button
+     *
+     * @param listener The listener method
+     */
+    public boolean isCancelled() {
+        return this.shouldCancel;
+    }
+
+    /**
      * Method to set the target directory
      *
      * @param dir A directory
@@ -189,6 +296,52 @@ class JobWindow extends Stage {
             this.targetDir = dir;
             this.targetDirTextField.setText(targetDir.toAbsolutePath().toString());
         }
+    }
+
+    /**
+     * A method to add times
+     *
+     * @param givenJob The job whose time is being calculated for
+     */
+    public void updateTimes(Job givenJob) {
+        if (this.shouldCancel == false) {
+          String readText = Long.toString(givenJob.readValue());
+          this.jobReadValue.setText(readText + "ns");
+
+          String processText = Long.toString(givenJob.processValue());
+          this.jobProcessValue.setText(processText + "ns");
+
+          String writeText = Long.toString(givenJob.readValue());
+          this.jobWriteValue.setText(writeText + "ns");
+
+          String totalText = Long.toString(givenJob.readValue() + givenJob.processValue() + givenJob.writeValue());
+          this.jobTotalValue.setText(totalText + "ns");
+        } else {
+          this.jobReadValue.setText("CANCELED");
+          this.jobProcessValue.setText("CANCELED");
+          this.jobWriteValue.setText("CANCELED");
+          this.jobTotalValue.setText("CANCELED");
+        }
+
+    }
+
+    /**
+     * A method used after the job is finished to enable the close button and
+     * show the time values
+     *
+     */
+    public void jobCompleted() {
+        this.closeButton.setDisable(false);
+        this.readTimeLabel.setVisible(true);
+        this.jobReadValue.setVisible(true);
+        this.processTimeLabel.setVisible(true);
+        this.jobProcessValue.setVisible(true);
+        this.writeTimeLabel.setVisible(true);
+        this.jobWriteValue.setVisible(true);
+        this.totalTimeLabel.setVisible(true);
+        this.jobTotalValue.setVisible(true);
+        this.cancelButton.setVisible(false);
+        this.cancelButton.setDisable(true);
     }
 
     /**
@@ -205,30 +358,37 @@ class JobWindow extends Stage {
         Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
 
         // Execute it
-        job.execute();
+        job.execute(this);
+
+        // close the window 
+        this.closeButton.setDisable(false);
+
+        this.cancelButton.setDisable(true);
+    }
+
+    /**
+     * A listener that updates job window when a job finishes
+     *
+     * @param jobOutcome The outcome of a job 
+     */
+    public void displayJob(Job.ImgTransformOutcome imageOutcome){
 
         // Process the outcome
         List<Path> toAddToDisplay = new ArrayList<>();
 
         StringBuilder errorMessage = new StringBuilder();
-        for (Job.ImgTransformOutcome o : job.getOutcome()) {
-            if (o.success) {
-                toAddToDisplay.add(o.outputFile);
-            } else {
-                errorMessage.append(o.inputFile.toAbsolutePath().toString()).append(": ").append(o.error.getMessage()).append("\n");
-            }
-        }
 
-        // Pop up error dialog if needed
-        if (!errorMessage.toString().equals("")) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("ImgTransform Job Error");
-            alert.setHeaderText(null);
-            alert.setContentText(errorMessage.toString());
-            alert.showAndWait();
+        if (imageOutcome.success) {
+            toAddToDisplay.add(imageOutcome.outputFile);
+        }else if(!imageOutcome.success && imageOutcome.error == null){
+            errorMessage.append(imageOutcome.inputFile.toAbsolutePath().toString()).append(": ").append("Cancelled").append("\n");
+        }else {
+            errorMessage.append(imageOutcome.inputFile.toAbsolutePath().toString()).append(": ").append(imageOutcome.error.getMessage()).append("\n");
         }
 
         // Update the viewport
         this.flwvp.addFiles(toAddToDisplay);
+
     }
+
 }

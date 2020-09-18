@@ -81,17 +81,19 @@ class MainWindow {
             this.pendingJobCount += 1;
             this.jobID += 1;
             JobWindow jw = new JobWindow(
-                    (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
-                    this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
-                    this.primaryStage.getY() + 50 + this.pendingJobCount * 10,
-                    this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()));
-
-            jw.addCloseListener(() -> {
-                this.pendingJobCount -= 1;
-                if (this.pendingJobCount == 0) {
-                    this.quitButton.setDisable(false);
-                }
-            });
+                (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
+                this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
+                this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
+                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()));
+                
+                jw.addCloseListener(() -> {
+                    
+                    this.pendingJobCount -= 1;
+                    if (this.pendingJobCount == 0) {
+                        this.quitButton.setDisable(false);
+                    }
+                });
+                
         });
 
         //Construct the layout
