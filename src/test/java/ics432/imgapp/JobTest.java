@@ -105,9 +105,11 @@ class JobTest {
         
         // waitForRunLater();
 
-        Semaphore semaphore = new Semaphore(0);
-        Platform.runLater(() -> semaphore.release());
-        semaphore.acquire();
+        // Semaphore semaphore = new Semaphore(0);
+        // Platform.runLater(() -> semaphore.release());
+        // semaphore.acquire();
+
+        Thread.sleep(1000);
 
         // Execute it
         job.execute(window);
@@ -149,7 +151,7 @@ class JobTest {
         Semaphore semaphore = new Semaphore(0);
         Platform.runLater(() -> semaphore.release());
         semaphore.acquire();
-        
+
         // Execute it
         job.execute(window);
 
