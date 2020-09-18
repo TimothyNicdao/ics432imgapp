@@ -1,5 +1,6 @@
 package ics432.imgapp;
 
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 
@@ -32,6 +33,11 @@ class Job {
     // The list of outcomes for each input file
     private final List<ImgTransformOutcome> outcome;
 
+    // Times for reading, writing, and processing the image(s)
+    private long readTime = 0;
+    private long writeTime = 0;
+    private long processTime = 0;
+
     /**
      * Constructor
      *
@@ -54,36 +60,6 @@ class Job {
      * Method to execute the imgTransform job
      */
     void execute(JobWindow window) {
-        // class ImageThread extends Thread { 
-
-        //     public Path inputFile; 
-
-        //     public ImageThread (String s, Path inputFile) { 
-        //       super(s); 
-        //       this.inputFile = inputFile;
-        //     }
-          
-        //     public void run() { 
-        //         try{
-        //             Thread.sleep(7000);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
-        //         }catch(Exception e){
-        //             System.out.println(e);
-        //         }
-    
-        //         //////////////// Remove entire block above !!!!
-        //         System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-    
-        //         Path outputFile;
-        //         try {
-        //             outputFile = processInputFile(inputFile);
-        //             // Generate a "success" outcome
-        //             this.outcome.add(new ImgTransformOutcome(true, inputFile, outputFile, null));
-        //         } catch (IOException e) {
-        //             // Generate a "failure" outcome
-        //             this.outcome.add(new ImgTransformOutcome(false, inputFile, null, e));
-        //         }
-        //     } 
-        //   }
 
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
@@ -91,7 +67,6 @@ class Job {
             if(!window.isCancelled())
             {
                 try{
-                    Thread.sleep(1000);     // REMOVE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -- This is for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!6
                 }catch(Exception e){
                     System.out.println(e);
                 }
@@ -112,6 +87,8 @@ class Job {
                 window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
             }
         }
+        Platform.runLater(()-> window.updateTimes(this));
+        Platform.runLater(()-> window.jobCompleted());
     }
 
     /**
@@ -124,6 +101,33 @@ class Job {
         return this.outcome;
     }
 
+        /**
+     * Getter for readTime
+     *
+     * @return The read time of the job
+     */
+    public long readValue() { 
+        return readTime; 
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public long processValue() { 
+        return processTime; 
+    }
+
+    /**
+     * Getter for writeTime
+     *
+     * @return The write time of the job
+     */
+    public long writeValue() { 
+        return writeTime; 
+    }
+
     /**
      * Helper method to apply a imgTransform to an input image file
      *
@@ -134,6 +138,7 @@ class Job {
 
         // Load the image from file
         Image image;
+        long readStartTime = System.nanoTime();
         try {
             image = new Image(inputFile.toUri().toURL().toString());
             if (image.isError()) {
@@ -143,11 +148,17 @@ class Job {
         } catch (IOException e) {
             throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString());
         }
+        long readEndTime = System.nanoTime();
+        readTime += readEndTime - readStartTime;
 
         // Process the image
+        long processStartTime = System.nanoTime();
         BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(image, null), null);
+        long processEndTime = System.nanoTime();
+        processTime += processEndTime - processStartTime;
 
         // Write the image back to a file
+        long writeStartTime = System.nanoTime();
         String outputPath = this.targetDir + System.getProperty("file.separator") + this.imgTransform.getName() + "_" + inputFile.getFileName();
         try {
             OutputStream os = new FileOutputStream(new File(outputPath));
@@ -156,6 +167,8 @@ class Job {
         } catch (IOException | NullPointerException e) {
             throw new IOException("Error while writing to " + outputPath);
         }
+        long writeEndTime = System.nanoTime();
+        writeTime += writeEndTime - writeStartTime;
 
         // Success!
         return Paths.get(outputPath);
