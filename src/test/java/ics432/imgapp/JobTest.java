@@ -45,19 +45,9 @@ class JobTest {
 
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
-
-        Platform.runLater(()-> {
-            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
-        });
-
-        // waitForRunLater();
-
-        Semaphore semaphore = new Semaphore(0);
-        Platform.runLater(() -> semaphore.release());
-        semaphore.acquire();
-        
+        JobWindow jw = new JobWindow(800, 400, 0,0,0, fileList);
         // Execute it
-        job.execute(window);
+        job.execute(jw);
 
         int count = 0;
         for (Job.ImgTransformOutcome outcome : job.getOutcome()) {
@@ -99,20 +89,9 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        Platform.runLater(()-> {
-            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
-        });
-        
-        // waitForRunLater();
-
-        // Semaphore semaphore = new Semaphore(0);
-        // Platform.runLater(() -> semaphore.release());
-        // semaphore.acquire();
-
-        Thread.sleep(1000);
-
+        JobWindow jw = new JobWindow(800, 400, 0,0,0, fileList);
         // Execute it
-        job.execute(window);
+        job.execute(jw);
 
         assert(job.getOutcome().size() == 1);
 
@@ -141,19 +120,9 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        Platform.runLater(()-> {
-            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
-        });
-
-        // waitForRunLater(); 
-
-
-        Semaphore semaphore = new Semaphore(0);
-        Platform.runLater(() -> semaphore.release());
-        semaphore.acquire();
-
+        JobWindow jw = new JobWindow(800, 400, 0,0,0, fileList);
         // Execute it
-        job.execute(window);
+        job.execute(jw);
 
         assert(job.getOutcome().size() == 1);
 
