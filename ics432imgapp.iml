@@ -13,15 +13,15 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:11" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:linux:11" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:mac:11" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:11" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:linux:11" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:11" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-base:11" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-swing:11-ea+24" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-swing:linux:11-ea+24" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-swing:mac:11-ea+24" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testfx:openjfx-monocle:jdk-11+26" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.openjfx:javafx-base:win:11-ea+25" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:linux:11-ea+25" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:11-ea+25" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.openjfx:javafx-controls:win:11-ea+25" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.openjfx:javafx-graphics:win:11-ea+25" level="project" />
     <orderEntry type="library" name="Maven: com.jhlabs:filters:2.0.235-1" level="project" />
