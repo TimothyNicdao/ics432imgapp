@@ -1,5 +1,6 @@
 package ics432.imgapp;
 
+import javafx.application.Platform;
 import com.jhlabs.image.InvertFilter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
