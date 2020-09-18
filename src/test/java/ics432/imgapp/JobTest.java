@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent;
+import java.util.concurrent.Semaphore;
 
 
 @ExtendWith(ApplicationExtension.class)
@@ -136,7 +136,7 @@ class JobTest {
         });
 
         waitForRunLater(); 
-        
+
         // Execute it
         job.execute(window);
 
