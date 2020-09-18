@@ -44,7 +44,7 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        JobWindow window = new JobWindow();
+        JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         
         // Execute it
         job.execute(window);
@@ -89,7 +89,7 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        JobWindow window = new JobWindow();
+        JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         
         // Execute it
         job.execute(window);
@@ -121,7 +121,7 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        JobWindow window = new JobWindow();
+        JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
 
         // Execute it
         job.execute(window);
