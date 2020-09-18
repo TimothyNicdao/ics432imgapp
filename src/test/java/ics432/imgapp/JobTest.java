@@ -49,6 +49,9 @@ class JobTest {
         Platform.runLater(()-> {
             JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
+
+        waitForRunLater();
+
         // Execute it
         job.execute(window);
 
@@ -96,6 +99,8 @@ class JobTest {
             JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
         
+        waitForRunLater();
+
         // Execute it
         job.execute(window);
 
@@ -130,6 +135,8 @@ class JobTest {
             JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
 
+        waitForRunLater(); 
+        
         // Execute it
         job.execute(window);
 
@@ -143,7 +150,13 @@ class JobTest {
         assert(outcome.error.getClass() == IOException.class);
     }
 
-
+    // Method to wait for javafx threads
+    void waitForRunLater() throws InterruptedException {
+        Semaphore semaphore = new Semaphore(0);
+        Platform.runLater(() -> semaphore.release());
+        semaphore.acquire();
+    
+    }
 
 
 }
