@@ -47,7 +47,7 @@ class JobTest {
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
         Platform.runLater(()-> {
-            public volatile JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
 
         // waitForRunLater();
