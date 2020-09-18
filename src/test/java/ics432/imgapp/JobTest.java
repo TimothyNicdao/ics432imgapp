@@ -50,7 +50,7 @@ class JobTest {
             public volatile JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
 
-        waitForRunLater();
+        // waitForRunLater();
 
         // Execute it
         job.execute(window);
@@ -99,7 +99,7 @@ class JobTest {
             volatile JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
         
-        waitForRunLater();
+        // waitForRunLater();
 
         // Execute it
         job.execute(window);
@@ -135,7 +135,7 @@ class JobTest {
             volatile JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
         });
 
-        waitForRunLater(); 
+        // waitForRunLater(); 
 
         // Execute it
         job.execute(window);
@@ -159,5 +159,5 @@ class JobTest {
     
     // }
 
-    
+
 }
