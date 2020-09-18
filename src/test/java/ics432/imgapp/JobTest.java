@@ -89,7 +89,14 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        JobWindow jw = new JobWindow(800, 400, 0,0,0, fileList);
+        Platform.runLater(() -> {
+            JobWindow jw = new JobWindow(800, 400, 0,0,0, fileList);
+        });
+
+        Semaphore semaphore = new Semaphore(0);
+        Platform.runLater(() -> semaphore.release());
+        semaphore.acquire();
+       
         // Execute it
         job.execute(jw);
 
