@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent;
 
 
 @ExtendWith(ApplicationExtension.class)
@@ -44,8 +45,9 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
-        
+        Platform.runLater(()-> {
+            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+        });
         // Execute it
         job.execute(window);
 
@@ -89,7 +91,9 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+        Platform.runLater(()-> {
+            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+        });
         
         // Execute it
         job.execute(window);
@@ -121,7 +125,9 @@ class JobTest {
         ImgTransform imgTransform = new ImgTransform("Invert", new InvertFilter());
         Job job = new Job(imgTransform, Paths.get(targetDirPath), fileList);
 
-        JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+        Platform.runLater(()-> {
+            JobWindow window = new JobWindow(100, 100, 100 ,100, 1 , null);
+        });
 
         // Execute it
         job.execute(window);
