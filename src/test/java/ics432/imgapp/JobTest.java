@@ -150,6 +150,7 @@ class JobTest {
         assert(outcome.error.getClass() == IOException.class);
     }
 
+    @Test
     // Method to wait for javafx threads
     void waitForRunLater() throws InterruptedException {
         Semaphore semaphore = new Semaphore(0);
