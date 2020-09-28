@@ -86,6 +86,7 @@ class Job {
                 // cancelled if not success and no exception
                 window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
             }
+            window.updateTasksDone();
         }
         Platform.runLater(()-> window.updateTimes(this));
         Platform.runLater(()-> window.jobCompleted());

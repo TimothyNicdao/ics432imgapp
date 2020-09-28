@@ -5,11 +5,15 @@ import com.jhlabs.image.InvertFilter;
 import com.jhlabs.image.OilFilter;
 import com.jhlabs.image.SolarizeFilter;
 import javafx.collections.FXCollections;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -17,6 +21,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import sun.tools.jconsole.inspector.ThreadDialog;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -48,9 +53,14 @@ class JobWindow extends Stage {
     private Label jobProcessValue = new Label("");
     private Label jobWriteValue = new Label("");
     private Label jobTotalValue = new Label("");
+    private Task workerTask;
+    final Label progressLabel = new Label("Image progress:");
+    final ProgressBar progressBar = new ProgressBar(0);
     private final ComboBox<ImgTransform> imgTransformList;
     private final ReentrantLock lock = new ReentrantLock();
     private boolean shouldCancel;
+    private boolean jobDone = false;
+    private int tasksDone = 0;
 
     /**
      * Constructor
@@ -152,6 +162,13 @@ class JobWindow extends Stage {
 
         this.imgTransformList.getSelectionModel().selectFirst();  //Chooses first imgTransform as default
 
+        // Progress Label Initialize
+        this.progressLabel.setPrefWidth(100);
+        this.progressLabel.setVisible(false);
+
+        // Progress Bar Initialize
+        this.progressBar.setVisible(false);
+
         // Create a "Run" button
         this.runButton = new Button("Run job (on " + inputFiles.size() + " image" + (inputFiles.size() == 1 ? "" : "s") + ")");
         this.runButton.setId("runJobButton");
@@ -170,7 +187,6 @@ class JobWindow extends Stage {
         this.cancelButton = new Button("Cancel");
         this.cancelButton.setId("cancelButton");
         this.cancelButton.setPrefHeight(buttonPreferredHeight);
-        this.cancelButton.setVisible(false);
         this.cancelButton.setDisable(true);
 
         // Set actions for all widgets
@@ -186,15 +202,22 @@ class JobWindow extends Stage {
             this.changeDirButton.setDisable(true);
             this.runButton.setDisable(true);
             this.imgTransformList.setDisable(true);
-            this.cancelButton.setVisible(true);
             this.cancelButton.setDisable(false);
+            this.progressLabel.setVisible(true);
+            this.progressBar.setVisible(true);
+            this.progressBar.setProgress(0);
           
             Runnable myJob = () -> {
                 executeJob(imgTransformList.getSelectionModel().getSelectedItem());
             };
             Thread thread1 = new Thread(myJob);
             thread1.start();
-            
+
+            Runnable progressTracker = () -> {
+                progress();
+            };
+            Thread thread2 = new Thread(progressTracker);
+            thread2.start();
             // this.closeButton.setDisable(false); will be implemented via a listener 
         });
 
@@ -216,6 +239,8 @@ class JobWindow extends Stage {
         row2.setAlignment(Pos.CENTER_LEFT);
         row2.getChildren().add(transformLabel);
         row2.getChildren().add(imgTransformList);
+        row2.getChildren().add(progressLabel);
+        row2.getChildren().add(progressBar);
         layout.getChildren().add(row2);
 
         layout.getChildren().add(flwvp);
@@ -247,6 +272,24 @@ class JobWindow extends Stage {
 
     }
 
+    private void progress() {
+        double filesDone = 0;
+        double totalFiles = inputFiles.size();
+        double percentage = 0;
+        while(this.jobDone == false) {
+            if (this.tasksDone != filesDone) {
+                percentage = (filesDone + 1)/totalFiles;
+                this.progressBar.setProgress(percentage);
+                filesDone++;
+            }
+            System.out.println(percentage);
+        }
+    };
+
+    public void updateTasksDone() {
+        this.tasksDone = this.tasksDone + 1;
+    } 
+
     /**
      * Method to add a listener for the "window was closed" event
      *
@@ -267,6 +310,9 @@ class JobWindow extends Stage {
         try {
             this.shouldCancel = true; 
             this.runButton.setDisable(true);
+            this.workerTask.cancel(true);
+            this.progressBar.progressProperty().unbind();
+            this.progressBar.setProgress(0);
         }
         catch(Exception batcherror) {
             System.out.println(batcherror);
@@ -342,6 +388,9 @@ class JobWindow extends Stage {
         this.jobTotalValue.setVisible(true);
         this.cancelButton.setVisible(false);
         this.cancelButton.setDisable(true);
+        this.progressLabel.setVisible(false);
+        this.progressBar.setVisible(false);
+        jobDone = true;
     }
 
     /**
