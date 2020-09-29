@@ -61,8 +61,17 @@ class Job {
      */
     void execute(JobWindow window) {
 
+        double jobsDone = 0;
+
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
+
+            try {
+                
+                Thread.sleep(1500); 
+            } catch (Exception e) {
+                System.out.println("Thread couldn't sleep");
+            }
 
             if(!window.isCancelled())
             {
@@ -78,6 +87,8 @@ class Job {
                     outputFile = processInputFile(inputFile);
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                    jobsDone++; 
+                    window.updateProgress(jobsDone);
                 } catch (IOException e) {
                     // Generate a "failure" outcome
                     window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
@@ -85,6 +96,7 @@ class Job {
             }else{
                 // cancelled if not success and no exception
                 window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
+                break;
             }
         }
         Platform.runLater(()-> window.updateTimes(this));

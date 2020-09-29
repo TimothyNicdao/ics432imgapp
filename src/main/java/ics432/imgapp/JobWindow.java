@@ -17,6 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.scene.control.ProgressBar;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -48,9 +49,13 @@ class JobWindow extends Stage {
     private Label jobProcessValue = new Label("");
     private Label jobWriteValue = new Label("");
     private Label jobTotalValue = new Label("");
+    private Label progressLabel = new Label("Progress: ");
     private final ComboBox<ImgTransform> imgTransformList;
     private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock progressLock = new ReentrantLock();
     private boolean shouldCancel;
+    private final ProgressBar progressBar = new ProgressBar(0);
+
 
     /**
      * Constructor
@@ -138,6 +143,13 @@ class JobWindow extends Stage {
         this.jobTotalValue.setPrefWidth(100);
         this.jobTotalValue.setVisible(false);
 
+        // progress bar for jobs
+        this.progressBar.setPrefWidth(400);
+        this.progressBar.setVisible(false);
+
+        this.progressLabel.setPrefWidth(100);
+        this.progressLabel.setVisible(false);
+
         //  Create the pulldown list of image transforms
         this.imgTransformList = new ComboBox<>();
         this.imgTransformList.setId("imgTransformList");  // For TestFX
@@ -188,6 +200,8 @@ class JobWindow extends Stage {
             this.imgTransformList.setDisable(true);
             this.cancelButton.setVisible(true);
             this.cancelButton.setDisable(false);
+            this.progressLabel.setVisible(true);
+            this.progressBar.setVisible(true);
           
             Runnable myJob = () -> {
                 executeJob(imgTransformList.getSelectionModel().getSelectedItem());
@@ -235,6 +249,8 @@ class JobWindow extends Stage {
         row4.getChildren().add(jobWriteValue);
         row4.getChildren().add(totalTimeLabel);
         row4.getChildren().add(jobTotalValue);
+        row4.getChildren().add(progressLabel);
+        row4.getChildren().add(progressBar);
 
         layout.getChildren().add(row4);
 
@@ -342,6 +358,7 @@ class JobWindow extends Stage {
         this.jobTotalValue.setVisible(true);
         this.cancelButton.setVisible(false);
         this.cancelButton.setDisable(true);
+
     }
 
     /**
@@ -388,6 +405,30 @@ class JobWindow extends Stage {
 
         // Update the viewport
         this.flwvp.addFiles(toAddToDisplay);
+
+    }
+
+
+    /**
+     * A function that can update the progress bar of a JobWindow 
+     *
+     * @param progress The number of jobsDone
+     */
+    public void updateProgress(double jobsDone){
+        
+
+        try {
+            progressLock.lock();
+            // Process the outcome
+            this.progressBar.setProgress((jobsDone/this.inputFiles.size()));
+        }
+        catch(Exception error) {
+            System.out.println(error);
+        }
+        finally {
+            progressLock.unlock(); 
+        }
+
 
     }
 
