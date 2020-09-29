@@ -70,14 +70,15 @@ class Job {
                 }catch(Exception e){
                     System.out.println(e);
                 }
-    
+
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-    
+
                 Path outputFile;
                 try {
                     outputFile = processInputFile(inputFile);
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                    window.barUpdate(window, inputFiles.size());
                 } catch (IOException e) {
                     // Generate a "failure" outcome
                     window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
@@ -106,8 +107,8 @@ class Job {
      *
      * @return The read time of the job
      */
-    public long readValue() { 
-        return readTime; 
+    public long readValue() {
+        return readTime;
     }
 
     /**
@@ -115,8 +116,8 @@ class Job {
      *
      * @return The process time of the job
      */
-    public long processValue() { 
-        return processTime; 
+    public long processValue() {
+        return processTime;
     }
 
     /**
@@ -124,8 +125,8 @@ class Job {
      *
      * @return The write time of the job
      */
-    public long writeValue() { 
-        return writeTime; 
+    public long writeValue() {
+        return writeTime;
     }
 
     /**

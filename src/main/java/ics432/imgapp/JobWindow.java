@@ -17,6 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.geometry.Insets;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -51,6 +52,7 @@ class JobWindow extends Stage {
     private final ComboBox<ImgTransform> imgTransformList;
     private final ReentrantLock lock = new ReentrantLock();
     private boolean shouldCancel;
+    private final ProgressBar pBar;
 
     /**
      * Constructor
@@ -63,7 +65,7 @@ class JobWindow extends Stage {
      * @param inputFiles The batch of input image files
      */
     JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles) {
-        // Keep track of wether the jobs were cancelled via the cancel button 
+        // Keep track of wether the jobs were cancelled via the cancel button
         lock.lock();
         try {
             this.shouldCancel = false;
@@ -72,7 +74,7 @@ class JobWindow extends Stage {
             System.out.println(batcherror);
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
 
         // The  preferred height of buttons
@@ -188,19 +190,24 @@ class JobWindow extends Stage {
             this.imgTransformList.setDisable(true);
             this.cancelButton.setVisible(true);
             this.cancelButton.setDisable(false);
-          
+
             Runnable myJob = () -> {
                 executeJob(imgTransformList.getSelectionModel().getSelectedItem());
             };
             Thread thread1 = new Thread(myJob);
             thread1.start();
-            
-            // this.closeButton.setDisable(false); will be implemented via a listener 
+
+            // this.closeButton.setDisable(false); will be implemented via a listener
         });
 
         this.closeButton.setOnAction(f -> this.close());
-        
+
         this.cancelButton.setOnAction(f -> this.cancel());
+
+        this.pBar = new ProgressBar(0);
+        pBar.setPrefWidth(400);
+        pBar.setLayoutY(50);
+
 
         // Build the scene
         VBox layout = new VBox(5);
@@ -224,6 +231,8 @@ class JobWindow extends Stage {
         row3.getChildren().add(runButton);
         row3.getChildren().add(closeButton);
         row3.getChildren().add(cancelButton);
+        row3.getChildren().add(pBar);
+        row3.setMargin(pBar, new Insets(0, 0, 0, 150));
         layout.getChildren().add(row3);
 
         HBox row4 = new HBox(5);
@@ -265,14 +274,14 @@ class JobWindow extends Stage {
 
         lock.lock();
         try {
-            this.shouldCancel = true; 
+            this.shouldCancel = true;
             this.runButton.setDisable(true);
         }
         catch(Exception batcherror) {
             System.out.println(batcherror);
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -360,7 +369,7 @@ class JobWindow extends Stage {
         // Execute it
         job.execute(this);
 
-        // close the window 
+        // close the window
         this.closeButton.setDisable(false);
 
         this.cancelButton.setDisable(true);
@@ -369,7 +378,7 @@ class JobWindow extends Stage {
     /**
      * A listener that updates job window when a job finishes
      *
-     * @param jobOutcome The outcome of a job 
+     * @param jobOutcome The outcome of a job
      */
     public void displayJob(Job.ImgTransformOutcome imageOutcome){
 
@@ -388,6 +397,12 @@ class JobWindow extends Stage {
 
         // Update the viewport
         this.flwvp.addFiles(toAddToDisplay);
+
+    }
+
+    public void barUpdate(JobWindow jWindow, int size){
+      double pValue = (1 / (double) size);
+      jWindow.pBar.setProgress(pBar.getProgress() + pValue);
 
     }
 
