@@ -21,7 +21,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import sun.tools.jconsole.inspector.ThreadDialog;
+
 
 import java.io.File;
 import java.nio.file.Path;
@@ -60,7 +60,7 @@ class JobWindow extends Stage {
     private final ReentrantLock lock = new ReentrantLock();
     private boolean shouldCancel;
     private boolean jobDone = false;
-    private int tasksDone = 0;
+    private volatile int tasksDone = 0;
 
     /**
      * Constructor
@@ -277,18 +277,21 @@ class JobWindow extends Stage {
         double totalFiles = inputFiles.size();
         double percentage = 0;
         while(this.jobDone == false) {
-            if (this.tasksDone != filesDone) {
+            if (getTasksDone() != filesDone) {
                 percentage = (filesDone + 1)/totalFiles;
                 this.progressBar.setProgress(percentage);
                 filesDone++;
             }
-            System.out.println(percentage);
         }
     };
 
-    public void updateTasksDone() {
+    public synchronized void updateTasksDone() {
         this.tasksDone = this.tasksDone + 1;
     } 
+
+    private double getTasksDone() {
+        return this.tasksDone;
+    }
 
     /**
      * Method to add a listener for the "window was closed" event
