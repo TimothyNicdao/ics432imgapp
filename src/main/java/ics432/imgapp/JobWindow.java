@@ -232,7 +232,7 @@ class JobWindow extends Stage {
         row3.getChildren().add(closeButton);
         row3.getChildren().add(cancelButton);
         row3.getChildren().add(pBar);
-        row3.setMargin(pBar, new Insets(0, 0, 0, 150));
+        row3.setMargin(pBar, new Insets(0, 0, 0, 176));
         layout.getChildren().add(row3);
 
         HBox row4 = new HBox(5);

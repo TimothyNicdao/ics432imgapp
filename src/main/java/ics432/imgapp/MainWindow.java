@@ -24,6 +24,7 @@ class MainWindow {
 
     private final Stage primaryStage;
     private final Button quitButton;
+    private final Button statButton;
     private int pendingJobCount = 0;
     private final FileListWithViewPort fileListWithViewPort;
     private int jobID = 0;
@@ -53,6 +54,10 @@ class MainWindow {
         createJobButton.setPrefHeight(buttonPreferredHeight);
         createJobButton.setDisable(true);
         createJobButton.setId("createJobButton"); // for TestFX
+
+        statButton = new Button("Show Statistics");
+        statButton.setPrefHeight(buttonPreferredHeight);
+        createJobButton.setId("statButton"); // for TestFX
 
         quitButton = new Button("Quit");
         quitButton.setId("quitButton"); // for TestFX
@@ -85,15 +90,31 @@ class MainWindow {
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
                 this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()));
-                
+
                 jw.addCloseListener(() -> {
-                    
+
                     this.pendingJobCount -= 1;
                     if (this.pendingJobCount == 0) {
                         this.quitButton.setDisable(false);
                     }
                 });
-                
+
+        });
+
+        statButton.setOnAction(e -> {
+            this.quitButton.setDisable(true);
+            this.statButton.setDisable(true);
+            StatWindow sw = new StatWindow(
+                (int) (windowWidth * 0.5), (int) (windowHeight * 0.5),
+                this.primaryStage.getX() + 100,
+                this.primaryStage.getY() + 50
+                );
+
+            sw.addCloseListener(() -> {
+                this.statButton.setDisable(false);
+                this.quitButton.setDisable(false);
+            });
+
         });
 
         //Construct the layout
@@ -104,6 +125,7 @@ class MainWindow {
 
         HBox row = new HBox(5);
         row.getChildren().add(createJobButton);
+        row.getChildren().add(statButton);
         row.getChildren().add(quitButton);
         layout.getChildren().add(row);
 

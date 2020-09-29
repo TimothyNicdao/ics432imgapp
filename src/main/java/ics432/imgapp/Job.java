@@ -73,12 +73,15 @@ class Job {
 
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
 
+                //here is where the incrementing stuff is supposed to be
+
                 Path outputFile;
                 try {
                     outputFile = processInputFile(inputFile);
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
                     window.barUpdate(window, inputFiles.size());
+                    //another stuff
                 } catch (IOException e) {
                     // Generate a "failure" outcome
                     window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
