@@ -407,7 +407,7 @@ class JobWindow extends Stage {
     }
 
     public void updateNum1(){
-      MainWindow.number1 ++;
+      MainWindow.numSuc ++;
 
       if(MainWindow.statW == null) {
       } else {
@@ -416,10 +416,19 @@ class JobWindow extends Stage {
     }
 
     public void updateNum2(){
-      MainWindow.number2 ++;
+      MainWindow.numExec ++;
 
       if(MainWindow.statW == null) {
-      } else { MainWindow.statW.function2();
+      } else {
+        MainWindow.statW.function2();
+      }
+    }
+
+    public void updateAvg(double avg, String temp) {
+
+      if (MainWindow.statW == null) {
+      } else {
+        MainWindow.statW.function3(avg, temp);
       }
     }
 

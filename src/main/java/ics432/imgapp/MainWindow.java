@@ -29,8 +29,11 @@ class MainWindow {
     private final FileListWithViewPort fileListWithViewPort;
     private int jobID = 0;
     public static StatWindow statW;
-    public static volatile int number1;
-    public static volatile int number2;
+    public static volatile int numSuc;
+    public static volatile int numExec;
+    public static volatile double avg_invert;
+    public static volatile double avg_solarize;
+    public static volatile double avg_oil4;
 
     /**
      * Constructor
@@ -41,8 +44,11 @@ class MainWindow {
 
         double buttonPreferredHeight = 27.0;
 
-        this.number1 = 0;
-        this.number2 = 0;
+        this.numSuc = 0;
+        this.numExec = 0;
+        this.avg_invert = 0;
+        this.avg_solarize = 0;
+        this.avg_oil4 = 0;
         // Set up the primaryStage
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("ICS 432 Image Editing App");

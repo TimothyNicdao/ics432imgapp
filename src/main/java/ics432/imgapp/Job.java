@@ -36,6 +36,9 @@ class Job {
     private long readTime = 0;
     private long writeTime = 0;
     private long processTime = 0;
+    private long totalTime = 0;
+    private long fileSize = 0;
+    private double average = 0;
 
     /**
      * Constructor
@@ -74,13 +77,20 @@ class Job {
                 window.updateNum2();
 
                 try {
-                  System.err.println(Files.size(inputFile) + " bytes");
+                  fileSize += Files.size(inputFile);
+                  //System.err.println((double)(fileSize) / 1000000 + " MB");
                 } catch (IOException e) {}
 
 
                 Path outputFile;
                 try {
                     outputFile = processInputFile(inputFile);
+                    //System.err.println(totalTime/1000000000 + " s");
+
+                    average = (((double)fileSize/(double)totalTime) * 1000);
+                    //System.err.println(average + " MB/s");
+                    window.updateAvg(average, this.imgTransform.getName());
+
                     window.barUpdate(window, inputFiles.size());
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
@@ -178,6 +188,8 @@ class Job {
         }
         long writeEndTime = System.nanoTime();
         writeTime += writeEndTime - writeStartTime;
+
+        totalTime = readTime + writeTime + processTime;
 
         // Success!
         return Paths.get(outputPath);
