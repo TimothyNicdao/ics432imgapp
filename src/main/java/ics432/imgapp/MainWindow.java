@@ -37,6 +37,7 @@ class MainWindow {
     private final FileListWithViewPort fileListWithViewPort;
     private int jobID = 0;
     private Double updatedValue;
+    public StatisticsWindow sw;
 
     /**
      * Constructor
@@ -91,6 +92,7 @@ class MainWindow {
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10, this);
 
+            this.sw = sw;
                 sw.addCloseListener(() -> {
                     this.showStatsButton.setDisable(false);
                 });

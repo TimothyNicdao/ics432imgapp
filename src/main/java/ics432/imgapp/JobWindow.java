@@ -397,7 +397,6 @@ class JobWindow extends Stage {
         this.progressLabel.setVisible(false);
         this.progressBar.setVisible(false);
         jobDone = true;
-        this.mw.increaseExecutedJobs();
     }
 
     /**
