@@ -11,8 +11,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,19 +71,25 @@ class Job {
                 }
 
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
+                window.updateNum2();
 
-                //here is where the incrementing stuff is supposed to be
+                try {
+                  System.err.println(Files.size(inputFile) + " bytes");
+                } catch (IOException e) {}
+
 
                 Path outputFile;
                 try {
                     outputFile = processInputFile(inputFile);
+                    window.barUpdate(window, inputFiles.size());
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
-                    window.barUpdate(window, inputFiles.size());
+                    window.updateNum1();
                     //another stuff
                 } catch (IOException e) {
                     // Generate a "failure" outcome
                     window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
+                    window.barUpdate(window, inputFiles.size());
                 }
             }else{
                 // cancelled if not success and no exception

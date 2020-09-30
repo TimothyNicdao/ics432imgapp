@@ -1,5 +1,7 @@
 package ics432.imgapp;
 
+import javafx.application.Platform;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.Event;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -49,9 +51,10 @@ class StatWindow extends Stage {
         this.closeButton.setPrefHeight(buttonPreferredHeight);
         this.closeButton.setOnAction(f -> this.close());
 
-        this.label1 = new Label("Label1");
-        this.label2 = new Label("Label2");
-
+        this.label1 = new Label("The total # of successfully processed images");
+        this.label1.textProperty().bind(new SimpleIntegerProperty(MainWindow.number1).asString());
+        this.label2 = new Label("The total # of executed jobs");
+        this.label2.textProperty().bind(new SimpleIntegerProperty(MainWindow.number2).asString());
 
         // Build the scene
         VBox layout = new VBox(5);
@@ -79,6 +82,14 @@ class StatWindow extends Stage {
 
   public void addCloseListener(Runnable listener) {
     this.addEventHandler(WindowEvent.WINDOW_HIDDEN, (event) -> listener.run());
+  }
+
+  public synchronized void function1(){
+    Platform.runLater(() -> this.label1.textProperty().bind(new SimpleIntegerProperty(MainWindow.number1).asString()));
+  }
+
+  public synchronized void function2(){
+    Platform.runLater(() -> this.label2.textProperty().bind(new SimpleIntegerProperty(MainWindow.number2).asString()));
   }
 
 

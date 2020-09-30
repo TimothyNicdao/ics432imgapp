@@ -205,7 +205,7 @@ class JobWindow extends Stage {
         this.cancelButton.setOnAction(f -> this.cancel());
 
         this.pBar = new ProgressBar(0);
-        pBar.setPrefWidth(400);
+        pBar.setPrefWidth(500);
         pBar.setLayoutY(50);
 
 
@@ -404,6 +404,23 @@ class JobWindow extends Stage {
       double pValue = (1 / (double) size);
       jWindow.pBar.setProgress(pBar.getProgress() + pValue);
 
+    }
+
+    public void updateNum1(){
+      MainWindow.number1 ++;
+
+      if(MainWindow.statW == null) {
+      } else {
+        MainWindow.statW.function1();
+      }
+    }
+
+    public void updateNum2(){
+      MainWindow.number2 ++;
+
+      if(MainWindow.statW == null) {
+      } else { MainWindow.statW.function2();
+      }
     }
 
 }

@@ -28,6 +28,9 @@ class MainWindow {
     private int pendingJobCount = 0;
     private final FileListWithViewPort fileListWithViewPort;
     private int jobID = 0;
+    public static StatWindow statW;
+    public static volatile int number1;
+    public static volatile int number2;
 
     /**
      * Constructor
@@ -38,6 +41,8 @@ class MainWindow {
 
         double buttonPreferredHeight = 27.0;
 
+        this.number1 = 0;
+        this.number2 = 0;
         // Set up the primaryStage
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("ICS 432 Image Editing App");
@@ -81,6 +86,25 @@ class MainWindow {
 
         });
 
+        statButton.setOnAction(e -> {
+          this.quitButton.setDisable(true);
+          this.statButton.setDisable(true);
+          StatWindow sw = new StatWindow(
+              (int) (windowWidth * 0.5), (int) (windowHeight * 0.5),
+              this.primaryStage.getX() + 100,
+              this.primaryStage.getY() + 50
+          );
+
+          statW = sw;
+
+          sw.addCloseListener(() -> {
+            this.statButton.setDisable(false);
+            this.quitButton.setDisable(false);
+          });
+
+       });
+
+
         createJobButton.setOnAction(e -> {
             this.quitButton.setDisable(true);
             this.pendingJobCount += 1;
@@ -90,6 +114,7 @@ class MainWindow {
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
                 this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()));
+
 
                 jw.addCloseListener(() -> {
 
@@ -101,21 +126,6 @@ class MainWindow {
 
         });
 
-        statButton.setOnAction(e -> {
-            this.quitButton.setDisable(true);
-            this.statButton.setDisable(true);
-            StatWindow sw = new StatWindow(
-                (int) (windowWidth * 0.5), (int) (windowHeight * 0.5),
-                this.primaryStage.getX() + 100,
-                this.primaryStage.getY() + 50
-                );
-
-            sw.addCloseListener(() -> {
-                this.statButton.setDisable(false);
-                this.quitButton.setDisable(false);
-            });
-
-        });
 
         //Construct the layout
         VBox layout = new VBox(5);
