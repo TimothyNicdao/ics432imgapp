@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ class Job {
     private final ImgTransform imgTransform;
     private final Path targetDir;
     private final List<Path> inputFiles;
+    private Double imageSizeTotal = 0.0;
+    private Double computeSpeed = 0.0;
 
     // The list of outcomes for each input file
     private final List<ImgTransformOutcome> outcome;
@@ -37,6 +40,8 @@ class Job {
     private long readTime = 0;
     private long writeTime = 0;
     private long processTime = 0;
+    private Double totalTime = 0.0;
+    private MainWindow mw;
 
     /**
      * Constructor
@@ -59,7 +64,9 @@ class Job {
     /**
      * Method to execute the imgTransform job
      */
-    void execute(JobWindow window) {
+    void execute(JobWindow window, MainWindow mw) {
+        
+        this.mw = mw;
 
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
@@ -78,6 +85,8 @@ class Job {
                     outputFile = processInputFile(inputFile);
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                    mw.increaseImagesProcessed();
+                    this.imageSizeTotal += Files.size(inputFile);
                 } catch (IOException e) {
                     // Generate a "failure" outcome
                     window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
@@ -88,6 +97,8 @@ class Job {
             }
             window.updateTasksDone();
         }
+
+        updateFilter();
         Platform.runLater(()-> window.updateTimes(this));
         Platform.runLater(()-> window.jobCompleted());
     }
@@ -102,7 +113,24 @@ class Job {
         return this.outcome;
     }
 
-        /**
+    /**
+     * Update proper filter 
+     *
+     * @return The read time of the job
+     */
+    public void updateFilter() { 
+        this.imageSizeTotal = this.imageSizeTotal/100000;
+        this.computeSpeed = this.imageSizeTotal/this.totalTime;
+        if (this.imgTransform.getName() == "Invert") {
+            this.mw.updateInvert(this.computeSpeed);
+        } else if (this.imgTransform.getName() == "Oil4") {
+            this.mw.updateOil(this.computeSpeed);
+        } else if (this.imgTransform.getName() == "Solarize") {
+            this.mw.updateSolarize(this.computeSpeed);
+        }
+    }
+
+    /**
      * Getter for readTime
      *
      * @return The read time of the job
@@ -137,6 +165,7 @@ class Job {
      */
     private Path processInputFile(Path inputFile) throws IOException {
 
+        long totalStartTime = System.nanoTime();
         // Load the image from file
         Image image;
         long readStartTime = System.nanoTime();
@@ -170,6 +199,9 @@ class Job {
         }
         long writeEndTime = System.nanoTime();
         writeTime += writeEndTime - writeStartTime;
+
+        long totalEndTime = System.nanoTime();
+        this.totalTime = (double)((totalEndTime - totalStartTime)/1000000);
 
         // Success!
         return Paths.get(outputPath);

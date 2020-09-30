@@ -61,6 +61,7 @@ class JobWindow extends Stage {
     private boolean shouldCancel;
     private boolean jobDone = false;
     private volatile int tasksDone = 0;
+    private MainWindow mw;
 
     /**
      * Constructor
@@ -72,7 +73,9 @@ class JobWindow extends Stage {
      * @param id         The id of the job
      * @param inputFiles The batch of input image files
      */
-    JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles) {
+    JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles, MainWindow mainWindow) {
+        this.mw = mainWindow;
+        
         // Keep track of wether the jobs were cancelled via the cancel button 
         lock.lock();
         try {
@@ -394,6 +397,7 @@ class JobWindow extends Stage {
         this.progressLabel.setVisible(false);
         this.progressBar.setVisible(false);
         jobDone = true;
+        this.mw.increaseExecutedJobs();
     }
 
     /**
@@ -410,7 +414,7 @@ class JobWindow extends Stage {
         Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
 
         // Execute it
-        job.execute(this);
+        job.execute(this, this.mw);
 
         // close the window 
         this.closeButton.setDisable(false);

@@ -24,9 +24,19 @@ class MainWindow {
 
     private final Stage primaryStage;
     private final Button quitButton;
+    private final Button showStatsButton;
     private int pendingJobCount = 0;
+    private volatile int jobsExecuted = 0;
+    private volatile int imagesProcessed = 0;
+    private volatile ArrayList<Double> computeSpeedInvertArr = new ArrayList<Double>();
+    private volatile Double computeSpeedInvert = 0.0;
+    private volatile ArrayList<Double> computeSpeedOilArr = new ArrayList<Double>();
+    private volatile Double computeSpeedOil = 0.0;
+    private volatile ArrayList<Double> computeSpeedSolarizeArr = new ArrayList<Double>();
+    private volatile Double computeSpeedSolarize = 0.0;
     private final FileListWithViewPort fileListWithViewPort;
     private int jobID = 0;
+    private Double updatedValue;
 
     /**
      * Constructor
@@ -49,6 +59,10 @@ class MainWindow {
         addFilesButton.setPrefHeight(buttonPreferredHeight);
         addFilesButton.setId("addFilesButton"); // for TestFX
 
+        showStatsButton = new Button("Show Statistics");
+        addFilesButton.setPrefHeight(buttonPreferredHeight);
+        addFilesButton.setId("showStatsButton"); 
+
         Button createJobButton = new Button("Create Job");
         createJobButton.setPrefHeight(buttonPreferredHeight);
         createJobButton.setDisable(true);
@@ -70,6 +84,18 @@ class MainWindow {
         // Set actions for all widgets
         addFilesButton.setOnAction(e -> addFiles(selectFilesWithChooser()));
 
+        showStatsButton.setOnAction(e -> {
+            this.showStatsButton.setDisable(true);
+            StatisticsWindow sw = new StatisticsWindow(
+                (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
+                this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
+                this.primaryStage.getY() + 50 + this.pendingJobCount * +10, this);
+
+                sw.addCloseListener(() -> {
+                    this.showStatsButton.setDisable(false);
+                });
+        });
+
         quitButton.setOnAction(e -> {
             // If the button is enabled, it's fine to quit
             this.primaryStage.close();
@@ -84,7 +110,7 @@ class MainWindow {
                 (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
-                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()));
+                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()), this);
                 
                 jw.addCloseListener(() -> {
                     
@@ -104,6 +130,7 @@ class MainWindow {
 
         HBox row = new HBox(5);
         row.getChildren().add(createJobButton);
+        row.getChildren().add(showStatsButton);
         row.getChildren().add(quitButton);
         layout.getChildren().add(row);
 
@@ -152,5 +179,106 @@ class MainWindow {
             this.fileListWithViewPort.addFiles(files);
         }
     }
+
+    /**
+     * Method to update executed jobs number
+     *
+     * @param files The list of files
+     */
+    public synchronized void increaseExecutedJobs() {
+        this.jobsExecuted++;
+    }
+
+    /**
+     * Method to update executed jobs number
+     *
+     * @param files The list of files
+     */
+    public synchronized void increaseImagesProcessed() {
+        imagesProcessed++;
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public long getJobsExecuted() { 
+        return this.jobsExecuted; 
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public long getImagesProcessed() { 
+        return this.imagesProcessed; 
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public Double getComputeSpeedInvert() { 
+        return this.computeSpeedInvert; 
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public void updateInvert(Double value) {
+       this.computeSpeedInvertArr.add(value);
+       this.updatedValue = 0.0;
+       for (int i = 0; i < this.computeSpeedInvertArr.size(); i++) {
+           this.updatedValue = this.updatedValue + this.computeSpeedInvertArr.get(i);
+       }
+       this.computeSpeedInvert = this.updatedValue/this.computeSpeedInvertArr.size();
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public Double getComputeSpeedOil() { 
+        return this.computeSpeedOil; 
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public void updateOil(Double value) {
+        this.computeSpeedOilArr.add(value);
+        this.updatedValue = 0.0;
+        this.computeSpeedOilArr.forEach((item) -> this.updatedValue += item);
+        this.computeSpeedOil = this.updatedValue/this.computeSpeedOilArr.size();
+     }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public Double getComputeSpeedSolarize() { 
+        return this.computeSpeedSolarize; 
+    }
+
+    /**
+     * Getter for processTime
+     *
+     * @return The process time of the job
+     */
+    public void updateSolarize(Double value) {
+        this.computeSpeedSolarizeArr.add(value);
+        this.updatedValue = 0.0;
+        this.computeSpeedSolarizeArr.forEach((item) -> this.updatedValue += item);
+        this.computeSpeedSolarize = this.updatedValue/this.computeSpeedSolarizeArr.size();
+     }
 
 }
