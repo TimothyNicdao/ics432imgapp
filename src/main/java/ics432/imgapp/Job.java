@@ -13,8 +13,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 import static javax.imageio.ImageIO.createImageOutputStream;
 
@@ -68,7 +71,7 @@ class Job {
 
             try {
                 
-                Thread.sleep(1500); 
+                Thread.sleep(300); 
             } catch (Exception e) {
                 System.out.println("Thread couldn't sleep");
             }
@@ -81,14 +84,29 @@ class Job {
                 }
     
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-    
+
+                double fileSize = 0;
+                double startTime = 0;
+                double endTime = 0;
+                double duration = 0; 
+
                 Path outputFile;
                 try {
+                    startTime = System.nanoTime();
                     outputFile = processInputFile(inputFile);
+                    endTime = System.nanoTime();
+
+                    duration = (endTime - startTime);
+                    duration /= 1000000000; 
+                    fileSize = Files.size(inputFile);
+                    fileSize /= 1048576;
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
                     jobsDone++; 
                     window.updateProgress(jobsDone);
+                    window.stats.updateImagesProcessed();
+                    window.stats.updateFilterSpeeds(fileSize, this.imgTransform.getName() , duration);
+                
                 } catch (IOException e) {
                     // Generate a "failure" outcome
                     window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
@@ -98,6 +116,8 @@ class Job {
                 window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
                 break;
             }
+
+            window.stats.updateJobsExecuted();
         }
         Platform.runLater(()-> window.updateTimes(this));
         Platform.runLater(()-> window.jobCompleted());

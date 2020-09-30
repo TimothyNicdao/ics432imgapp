@@ -35,6 +35,7 @@ class JobWindow extends Stage {
 
     private Path targetDir;
     private final List<Path> inputFiles;
+    public  final Statistics stats;
     private final FileListWithViewPort flwvp;
     private final Button changeDirButton;
     private final TextField targetDirTextField;
@@ -67,7 +68,10 @@ class JobWindow extends Stage {
      * @param id         The id of the job
      * @param inputFiles The batch of input image files
      */
-    JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles) {
+    JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles, Statistics stats) {
+
+        this.stats = stats;
+
         // Keep track of wether the jobs were cancelled via the cancel button 
         lock.lock();
         try {

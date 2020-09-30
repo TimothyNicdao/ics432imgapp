@@ -24,6 +24,7 @@ class MainWindow {
 
     private final Stage primaryStage;
     private final Button quitButton;
+    private final Button statisticsButton;
     private int pendingJobCount = 0;
     private final FileListWithViewPort fileListWithViewPort;
     private int jobID = 0;
@@ -58,6 +59,17 @@ class MainWindow {
         quitButton.setId("quitButton"); // for TestFX
         quitButton.setPrefHeight(buttonPreferredHeight);
 
+        statisticsButton = new Button("Statistics");
+        statisticsButton.setId("statisticsButton"); // for TestFX
+        statisticsButton.setPrefHeight(buttonPreferredHeight);
+
+        // statistics window initialization
+
+        Statistics sw = new Statistics(
+        (int) (windowWidth * 0.4), (int) (windowHeight * 0.4),
+        this.primaryStage.getX() + 100,
+        this.primaryStage.getY() + 50);
+
         this.fileListWithViewPort = new FileListWithViewPort(
                 windowWidth  * 0.98,
                 windowHeight - 3 * buttonPreferredHeight - 3 * 5,
@@ -84,7 +96,9 @@ class MainWindow {
                 (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
-                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()));
+                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()),
+                sw
+                );
                 
                 jw.addCloseListener(() -> {
                     
@@ -93,6 +107,16 @@ class MainWindow {
                         this.quitButton.setDisable(false);
                     }
                 });
+                
+        });
+
+        statisticsButton.setOnAction(e -> {
+            this.statisticsButton.setDisable(true);
+            sw.show();
+                
+            sw.addCloseListener(() -> {
+                this.statisticsButton.setDisable(false);
+            });
                 
         });
 
@@ -105,6 +129,7 @@ class MainWindow {
         HBox row = new HBox(5);
         row.getChildren().add(createJobButton);
         row.getChildren().add(quitButton);
+        row.getChildren().add(statisticsButton);
         layout.getChildren().add(row);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
