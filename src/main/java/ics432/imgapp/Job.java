@@ -74,7 +74,6 @@ class Job {
                 }
 
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-                window.updateNum2();
 
                 try {
                   fileSize += Files.size(inputFile);
@@ -84,13 +83,9 @@ class Job {
 
                 Path outputFile;
                 try {
-                    outputFile = processInputFile(inputFile);
-                    //System.err.println(totalTime/1000000000 + " s");
-
+                    outputFile = processInputFile(inputFile, window);
                     average = (((double)fileSize/(double)totalTime) * 1000);
-                    //System.err.println(average + " MB/s");
                     window.updateAvg(average, this.imgTransform.getName());
-
                     window.barUpdate(window, inputFiles.size());
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
@@ -153,7 +148,7 @@ class Job {
      * @param inputFile The input file path
      * @return the output file path
      */
-    private Path processInputFile(Path inputFile) throws IOException {
+    private Path processInputFile(Path inputFile, JobWindow jw) throws IOException {
 
         // Load the image from file
         Image image;
@@ -175,6 +170,7 @@ class Job {
         BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(image, null), null);
         long processEndTime = System.nanoTime();
         processTime += processEndTime - processStartTime;
+        jw.updateNum2();
 
         // Write the image back to a file
         long writeStartTime = System.nanoTime();
