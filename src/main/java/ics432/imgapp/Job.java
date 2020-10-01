@@ -86,7 +86,8 @@ class Job {
                     // Generate a "success" outcome
                     window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
                     this.mw.increaseImagesProcessed();
-                    this.mw.sw.windowUpdateImagesProcessed();
+                    if(this.mw.sw == null){}
+                    else { this.mw.sw.windowUpdateImagesProcessed();}
                     this.imageSizeTotal += Files.size(inputFile);
                 } catch (IOException e) {
                     // Generate a "failure" outcome
@@ -101,7 +102,8 @@ class Job {
 
         updateFilter();
         this.mw.increaseExecutedJobs();
-        this.mw.sw.windowUpdateJobsExecuted();
+        if(this.mw.sw == null){}
+        else { this.mw.sw.windowUpdateJobsExecuted();}
         Platform.runLater(()-> window.updateTimes(this));
         Platform.runLater(()-> window.jobCompleted());
     }
@@ -127,13 +129,16 @@ class Job {
         this.computeSpeed = this.imageSizeTotal/this.totalTime;
         if (this.imgTransform.getName() == "Invert") {
             this.mw.updateInvert(this.computeSpeed);
-            this.mw.sw.windowUpdateInvert();
+            if(this.mw.sw == null){}
+            else { this.mw.sw.windowUpdateInvert();}
         } else if (this.imgTransform.getName() == "Oil4") {
             this.mw.updateOil(this.computeSpeed);
-            this.mw.sw.windowUpdateOil();
+            if(this.mw.sw == null){}
+            else { this.mw.sw.windowUpdateOil();}
         } else if (this.imgTransform.getName() == "Solarize") {
             this.mw.updateSolarize(this.computeSpeed);
-            this.mw.sw.windowUpdateSolarize();
+            if(this.mw.sw == null){}
+            else { this.mw.sw.windowUpdateSolarize();}
         }
     }
 
