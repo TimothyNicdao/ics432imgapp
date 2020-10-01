@@ -24,6 +24,9 @@ class StatisticsWindow extends Stage {
     private volatile Label computeSpeedInvertValue = new Label("");
     private volatile Label computeSpeedOilValue = new Label("");
     private volatile Label computeSpeedSolarizeValue = new Label("");
+    private Label unitsLabel1 = new Label("");
+    private Label unitsLabel2 = new Label("");
+    private Label unitsLabel3 = new Label("");
     private MainWindow mw;
 
     /**
@@ -54,24 +57,23 @@ class StatisticsWindow extends Stage {
 
 
         Label jobsExecutedLabel = new Label("Jobs Executed: ");
-        jobsExecutedLabel.setPrefWidth(85);
         this.jobsExecutedValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getJobsExecuted()).asString());
         
         Label imagesProcessedLabel = new Label("Images Processed: ");
-        imagesProcessedLabel.setPrefWidth(120);
         this.imagesProcessedValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getImagesProcessed()).asString());
 
         Label computeSpeedInvertLabel = new Label("Invert Filter Compute Speed: ");
-        computeSpeedInvertLabel.setPrefWidth(170);
         this.computeSpeedInvertValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedInvert()).asString());
 
         Label computeSpeedOilLabel = new Label("Oil Filter Compute Speed: ");
-        computeSpeedOilLabel.setPrefWidth(160);
         this.computeSpeedOilValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedOil()).asString());
 
         Label computeSpeedSolarizeLabel = new Label("Solarize Filter Compute Speed: ");
-        computeSpeedSolarizeLabel.setPrefWidth(180);
         this.computeSpeedSolarizeValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedSolarize()).asString());
+
+        this.unitsLabel1.setText(" Mb/s");
+        this.unitsLabel2.setText(" Mb/s");
+        this.unitsLabel3.setText(" Mb/s");
 
         // Create a "Close" button
         this.closeButton = new Button("Close");
@@ -102,16 +104,19 @@ class StatisticsWindow extends Stage {
         HBox row3 = new HBox(5);
         row3.getChildren().add(computeSpeedInvertLabel);
         row3.getChildren().add(computeSpeedInvertValue);
+        row3.getChildren().add(unitsLabel1);
         layout.getChildren().add(row3);
 
         HBox row4 = new HBox(5);
         row4.getChildren().add(computeSpeedOilLabel);
         row4.getChildren().add(computeSpeedOilValue);
+        row4.getChildren().add(unitsLabel2);
         layout.getChildren().add(row4);
 
         HBox row5 = new HBox(5);
         row5.getChildren().add(computeSpeedSolarizeLabel);
         row5.getChildren().add(computeSpeedSolarizeValue);
+        row5.getChildren().add(unitsLabel3);
         layout.getChildren().add(row5);
 
         HBox row6 = new HBox(5);
