@@ -101,9 +101,6 @@ class Job {
         }
 
         updateFilter();
-        this.mw.increaseExecutedJobs();
-        if(this.mw.sw == null){}
-        else { this.mw.sw.windowUpdateJobsExecuted();}
         Platform.runLater(()-> window.updateTimes(this));
         Platform.runLater(()-> window.jobCompleted());
     }
