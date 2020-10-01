@@ -123,6 +123,7 @@ class Job {
      */
     public void updateFilter() { 
         this.imageSizeTotal = this.imageSizeTotal/100000;
+        this.totalTime = this.totalTime/1000000000;
         this.computeSpeed = this.imageSizeTotal/this.totalTime;
         if (this.imgTransform.getName() == "Invert") {
             this.mw.updateInvert(this.computeSpeed);
@@ -207,7 +208,7 @@ class Job {
         writeTime += writeEndTime - writeStartTime;
 
         long totalEndTime = System.nanoTime();
-        this.totalTime = (double)((totalEndTime - totalStartTime)/1000000);
+        this.totalTime += (double)(totalEndTime - totalStartTime);
 
         // Success!
         return Paths.get(outputPath);
