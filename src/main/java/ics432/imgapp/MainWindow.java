@@ -3,6 +3,7 @@ package ics432.imgapp;
 import javafx.event.Event;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -38,6 +39,7 @@ class MainWindow {
     private int jobID = 0;
     private Double updatedValue;
     public StatisticsWindow sw;
+    public CheckBox multithreadCheckBox;
 
     /**
      * Constructor
@@ -72,6 +74,9 @@ class MainWindow {
         quitButton = new Button("Quit");
         quitButton.setId("quitButton"); // for TestFX
         quitButton.setPrefHeight(buttonPreferredHeight);
+
+        this.multithreadCheckBox = new CheckBox("Multithreading");
+        this.multithreadCheckBox.setPrefHeight(buttonPreferredHeight);
 
         this.fileListWithViewPort = new FileListWithViewPort(
                 windowWidth  * 0.98,
@@ -128,6 +133,7 @@ class MainWindow {
         VBox layout = new VBox(5);
 
         layout.getChildren().add(addFilesButton);
+        layout.getChildren().add(multithreadCheckBox);
         layout.getChildren().add(this.fileListWithViewPort);
 
         HBox row = new HBox(5);
@@ -281,6 +287,15 @@ class MainWindow {
         this.updatedValue = 0.0;
         this.computeSpeedSolarizeArr.forEach((item) -> this.updatedValue += item);
         this.computeSpeedSolarize = this.updatedValue/this.computeSpeedSolarizeArr.size();
+     }
+
+    /**
+     * Check if multithreaded
+     *
+     * @return The process time of the job
+     */
+    public boolean checkMultithread() {
+        return this.multithreadCheckBox.isSelected();
      }
 
 }

@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayDeque<E>;
 
 import static javax.imageio.ImageIO.createImageOutputStream;
 
@@ -65,6 +66,60 @@ class Job {
      * Method to execute the imgTransform job
      */
     void execute(JobWindow window, MainWindow mw) {
+
+        if(mw.checkMultithread()){
+            executeMultithreaded(window, mw);
+        }
+        else{
+            this.mw = mw;
+
+            // Go through each input file and process it
+            for (Path inputFile : inputFiles) {
+
+                if(!window.isCancelled())
+                {
+                    try{
+                    }catch(Exception e){
+                        System.out.println(e);
+                    }
+        
+                    System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
+                    
+                    if(mw.checkMultithread()){
+                        System.out.println("we are live boys!");
+                    }
+        
+                    Path outputFile;
+                    try {
+                        outputFile = processInputFile(inputFile);
+                        // Generate a "success" outcome
+                        window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
+                        this.mw.increaseImagesProcessed();
+                        if(this.mw.sw == null){}
+                        else { this.mw.sw.windowUpdateImagesProcessed();}
+                        this.imageSizeTotal += Files.size(inputFile);
+                    } catch (IOException e) {
+                        // Generate a "failure" outcome
+                        window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
+                    }
+                }else{
+                    // cancelled if not success and no exception
+                    window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
+                }
+                window.updateTasksDone();
+            }
+
+            updateFilter();
+            Platform.runLater(()-> window.updateTimes(this));
+            Platform.runLater(()-> window.jobCompleted());
+        }
+    }
+
+
+    /**
+     * Multithreaded version of execute
+     */
+    void executeMultithreaded(JobWindow window, MainWindow mw) {
         
         this.mw = mw;
 
@@ -79,6 +134,10 @@ class Job {
                 }
     
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
+                
+                if(mw.checkMultithread()){
+                    System.out.println("we are live boys!");
+                }
     
                 Path outputFile;
                 try {
@@ -104,6 +163,9 @@ class Job {
         Platform.runLater(()-> window.updateTimes(this));
         Platform.runLater(()-> window.jobCompleted());
     }
+
+
+
 
     /**
      * Getter for job outcomes
