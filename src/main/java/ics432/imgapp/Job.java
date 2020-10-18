@@ -43,14 +43,19 @@ class Job {
     private long processTime = 0;
     private Double totalTime = 0.0;
     private MainWindow mw;
+    private final Object readerAndProcessorLock = new Object();
+    private final Object processorAndWriterLock = new Object();
+
+    // bounded buffers for multithreading
+    private ArrayDeque<WorkUnit> readerToProcessor;
+    private ArrayDeque<WorkUnit> processorToWriter;
 
     /**
      * Constructor
      *
      * @param imgTransform The imgTransform to apply to input images
      * @param targetDir  The target directory in which to generate output images
-     * @param inputFiles The list of input file paths
-     */
+     * @param inputFiles The list of input file pathsport java.util.ArrayDeque<E>;
     Job(ImgTransform imgTransform,
         Path targetDir,
         List<Path> inputFiles) {
@@ -60,6 +65,9 @@ class Job {
         this.inputFiles = inputFiles;
 
         this.outcome = new ArrayList<>();
+
+        this.readerToProcessor = new ArrayDeque(inputFiles.size());
+        this.processorToWriter = new ArrayDeque(inputFiles.size());
     }
 
     /**
@@ -120,7 +128,29 @@ class Job {
      * Multithreaded version of execute
      */
     void executeMultithreaded(JobWindow window, MainWindow mw) {
+ 
+        Runnable readerThread = window -> {multithreadReader(window)};
+        Runnable processorThread = () -> {multithreadProcessor()};
+        Runnable writerThread =  window, mw-> {multithreadWriter(window, mw)};
         
+        Thread reader = new Thread(readerThread);
+        Thread processor = new Thread(processorThread);
+        Thread writer = new Thread(writerThread);
+
+        long totalStartTime = System.nanoTime();
+
+        reader.start();
+        processor.start();
+        writer.start();
+
+        reader.join();
+        processor.join();
+        writer.join();
+        
+        long totalEndTime = System.nanoTime();
+        this.totalTime = (double)(totalEndTime - totalStartTime);
+
+
         this.mw = mw;
 
         // Go through each input file and process it
@@ -135,10 +165,6 @@ class Job {
     
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
                 
-                if(mw.checkMultithread()){
-                    System.out.println("we are live boys!");
-                }
-    
                 Path outputFile;
                 try {
                     outputFile = processInputFile(inputFile);
@@ -164,7 +190,139 @@ class Job {
         Platform.runLater(()-> window.jobCompleted());
     }
 
+    /**
+     * Reader multithreaded method
+     *
+     * 
+     */
+    public void multithreadReader(JobWindow window) { 
+        for (Path inputFile : inputFiles) {
 
+            if(!window.isCancelled())
+            {
+
+                Image image;
+                long readStartTime = System.nanoTime();
+                try {
+                    image = new Image(inputFile.toUri().toURL().toString());
+                    if (image.isError()) {
+                        throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString() +
+                                " (" + image.getException().toString() + ")");
+                    }
+                } catch (Exception e) {
+                    throw new Exception("Error while reading from " + inputFile.toAbsolutePath().toString());
+                }
+                long readEndTime = System.nanoTime();
+                readTime += readEndTime - readStartTime;
+                
+                WorkUnit unit = new WorkUnit();
+                unit.inputFile = inputFile;
+                unit.image = image;
+                unit.readTime = readTime;
+
+                synchronized(readerAndProcessorLock){
+                    readerToProcessor.add(unit);
+                    this.notifyAll();
+                }
+            }
+        }
+
+        WorkUnit poisonedApple = new WorkUnit()
+        poisonedApple.poisoned = true; 
+
+        synchronized(readerAndProcessorLock){
+            readerToProcessor.add(poisonedApple)
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Processor multithreaded method
+     *
+     * 
+     */
+    public void multithreadProcessor() { 
+        while(1){
+            synchronize(readerAndProcessorLock){
+                while(readerToProcessor.size() == 0){
+                    wait()
+                }
+                WorkUnit unit = readerToProcessor.remove()
+            }
+
+            if(unit.poisoned){
+                synchronize(processorAndWriterLock){
+                    processorToWriter.add(unit)
+                    this.notifyAll();
+                }
+                break;
+            }
+            System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
+            // Process the image
+            long processStartTime = System.nanoTime();
+            BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(unit.image, null), null);
+            long processEndTime = System.nanoTime();
+            processTime += processEndTime - processStartTime;
+            unit.buffferedImage = img;
+            unit.processTime = processTime;
+
+            synchronize(processorAndWriterLock){
+                processorToWriter.add(unit);
+                this.notifyAll();
+            }
+        }
+    }
+
+        /**
+     * Writer multithreaded method
+     *
+     * 
+     */
+    public void multithreadWriter() { 
+        while(1){
+            synchronize(processorAndWriterLock){
+                while(processorToWriter.size() == 0){
+                    wait();
+                }
+                WorkUnit unit = processorToWriter.remove();
+            }
+
+            if(unit.poisoned){
+                break;
+            }
+
+            // Write the image back to a file
+            long writeStartTime = System.nanoTime();
+            String outputPath = this.targetDir + System.getProperty("file.separator") + this.imgTransform.getName() + "_" + unit.inputFile.getFileName();
+            try {
+                OutputStream os = new FileOutputStream(new File(outputPath));
+                ImageOutputStream outputStream = createImageOutputStream(os);
+                ImageIO.write(unit.buffferedImage, "jpg", outputStream);
+            } catch (IOException | NullPointerException e) {
+                throw new IOException("Error while writing to " + outputPath);
+            }
+            long writeEndTime = System.nanoTime();
+            writeTime += writeEndTime - writeStartTime;
+            unit.writeTime = writeTime;
+
+            try {
+                
+                // Generate a "success" outcome
+                window.displayJob(new ImgTransformOutcome(true, inputFile, Paths.get(outputPath), null));
+                this.mw.increaseImagesProcessed();
+                if(this.mw.sw == null){}
+                else { this.mw.sw.windowUpdateImagesProcessed();}
+                this.imageSizeTotal += Files.size(inputFile);
+            } catch (IOException e) {
+                // Generate a "failure" outcome
+                window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
+            }
+
+            window.updateTasksDone();
+
+        }
+    }
+    
 
 
     /**
@@ -306,5 +464,9 @@ class Job {
             this.outputFile = output_file;
             this.error = error;
         }
+    }
+
+    private void multithreadedReader(){
+
     }
 }
