@@ -8,7 +8,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-
+import javafx.scene.control.CheckBox;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,6 +25,7 @@ class MainWindow {
     private final Stage primaryStage;
     private final Button quitButton;
     private final Button showStatsButton;
+    private CheckBox mtcb = new CheckBox();
     private int pendingJobCount = 0;
     private volatile int jobsExecuted = 0;
     private volatile int imagesProcessed = 0;
@@ -38,6 +39,7 @@ class MainWindow {
     private int jobID = 0;
     private Double updatedValue;
     public StatisticsWindow sw;
+    public boolean mtcbSelected = false;
 
     /**
      * Constructor
@@ -56,6 +58,10 @@ class MainWindow {
         this.primaryStage.setOnCloseRequest(Event::consume);
 
         // Create all widgets
+
+        mtcb.setText("Multithreading");
+        mtcb.setSelected(false);
+
         Button addFilesButton = new Button("Add Image Files");
         addFilesButton.setPrefHeight(buttonPreferredHeight);
         addFilesButton.setId("addFilesButton"); // for TestFX
@@ -108,12 +114,18 @@ class MainWindow {
             this.quitButton.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
+
+            if (mtcb.isSelected()) {
+                mtcbSelected = true;
+            } else {
+                mtcbSelected = false;
+            }
+
             JobWindow jw = new JobWindow(
                 (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
                 this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()), this);
-                
                 jw.addCloseListener(() -> {
                     
                     this.pendingJobCount -= 1;
@@ -127,14 +139,18 @@ class MainWindow {
         //Construct the layout
         VBox layout = new VBox(5);
 
-        layout.getChildren().add(addFilesButton);
+        HBox row1 = new HBox(5);
+        row1.getChildren().add(addFilesButton);
+        row1.getChildren().add(mtcb);
+        layout.getChildren().add(row1);
+
         layout.getChildren().add(this.fileListWithViewPort);
 
-        HBox row = new HBox(5);
-        row.getChildren().add(createJobButton);
-        row.getChildren().add(showStatsButton);
-        row.getChildren().add(quitButton);
-        layout.getChildren().add(row);
+        HBox row2 = new HBox(5);
+        row2.getChildren().add(createJobButton);
+        row2.getChildren().add(showStatsButton);
+        row2.getChildren().add(quitButton);
+        layout.getChildren().add(row2);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
         this.primaryStage.setScene(scene);
