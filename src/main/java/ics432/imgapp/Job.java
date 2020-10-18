@@ -76,23 +76,23 @@ class Job {
 
         this.mw = mw;
         if (mw.mtcbSelected == true) {
-                Runnable readRun = () -> {
-                    readFunction(this.inputFiles);
-                };
-                Thread readThread = new Thread(readRun);
-                readThread.start();
+            Runnable readRun = () -> {
+                readFunction(this.inputFiles);
+            };
+            Thread readThread = new Thread(readRun);
+            readThread.start();
 
-                Runnable processRun = () -> {
-                    processFunction();
-                };
-                Thread processThread = new Thread(processRun);
-                processThread.start();
+            Runnable processRun = () -> {
+                processFunction();
+            };
+            Thread processThread = new Thread(processRun);
+            processThread.start();
 
-                Runnable writeRun = () -> {
-                    writeFunction(window);
-                };
-                Thread writeThread = new Thread(writeRun);
-                writeThread.start();
+            Runnable writeRun = () -> {
+                writeFunction(window);
+            };
+            Thread writeThread = new Thread(writeRun);
+            writeThread.start();
 
         } else {
             // Go through each input file and process it
@@ -129,7 +129,7 @@ class Job {
                 window.updateTasksDone();
             }
             long totalEndTime = System.nanoTime();
-            this.totalTime = (double)(totalEndTime - totalStartTime);
+            this.totalTime = (double) (totalEndTime - totalStartTime);
 
             updateFilter();
             Platform.runLater(() -> window.updateTimes(this));
@@ -140,6 +140,14 @@ class Job {
     private synchronized void readFunction(List<Path> inputFiles) {
         this.totalStartTime = System.nanoTime();
         for (Path inputFile : inputFiles) {
+
+            while (this.inputBuffer.size() == this.mw.sliderValue) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+
             System.err.println("Applying " + this.imgTransform.getName() + " to "
                             + inputFile.toAbsolutePath().toString() + " ...");
             // Load the image from file

@@ -9,6 +9,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Slider;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,6 +28,7 @@ class MainWindow {
     private final Button quitButton;
     private final Button showStatsButton;
     private CheckBox mtcb = new CheckBox();
+    private Slider imageSlider = new Slider();
     private int pendingJobCount = 0;
     private volatile int jobsExecuted = 0;
     private volatile int imagesProcessed = 0;
@@ -40,6 +43,7 @@ class MainWindow {
     private Double updatedValue;
     public StatisticsWindow sw;
     public boolean mtcbSelected = false;
+    public Double sliderValue = 2.0;
 
     /**
      * Constructor
@@ -58,6 +62,16 @@ class MainWindow {
         this.primaryStage.setOnCloseRequest(Event::consume);
 
         // Create all widgets
+
+        imageSlider.setPrefWidth(300.0);
+        imageSlider.setMax(40.0);
+        imageSlider.setMin(2.0);
+        imageSlider.setShowTickMarks(true);
+        imageSlider.setShowTickLabels(true);
+        imageSlider.setMajorTickUnit(2.0);
+        imageSlider.setMinorTickCount(0);
+        imageSlider.setBlockIncrement(2.0);
+        imageSlider.setSnapToTicks(true);
 
         mtcb.setText("Multithreading");
         mtcb.setSelected(false);
@@ -114,6 +128,7 @@ class MainWindow {
             this.quitButton.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
+            this.sliderValue = this.imageSlider.getValue();
 
             if (mtcb.isSelected()) {
                 mtcbSelected = true;
@@ -142,6 +157,7 @@ class MainWindow {
         HBox row1 = new HBox(5);
         row1.getChildren().add(addFilesButton);
         row1.getChildren().add(mtcb);
+        row1.getChildren().add(imageSlider);
         layout.getChildren().add(row1);
 
         layout.getChildren().add(this.fileListWithViewPort);
