@@ -237,6 +237,7 @@ class Job {
             synchronized(this) {
                 img = this.outputBuffer.removeFirst();
                 inputFile = this.inputFileBuffer.removeFirst();
+                notifyAll();
             }
             String outputPath = this.targetDir + System.getProperty("file.separator") + this.imgTransform.getName() + "_" + inputFile.getFileName();
             try {
