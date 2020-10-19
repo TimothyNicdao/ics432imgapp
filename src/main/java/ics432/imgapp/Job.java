@@ -56,6 +56,7 @@ class Job {
      * @param imgTransform The imgTransform to apply to input images
      * @param targetDir  The target directory in which to generate output images
      * @param inputFiles The list of input file pathsport java.util.ArrayDeque<E>;
+    */
     Job(ImgTransform imgTransform,
         Path targetDir,
         List<Path> inputFiles) {
@@ -129,9 +130,9 @@ class Job {
      */
     void executeMultithreaded(JobWindow window, MainWindow mw) {
  
-        Runnable readerThread = window -> {multithreadReader(window)};
-        Runnable processorThread = () -> {multithreadProcessor()};
-        Runnable writerThread =  window, mw-> {multithreadWriter(window, mw)};
+        Runnable readerThread = window -> {multithreadReader(window);};
+        Runnable processorThread = () -> {multithreadProcessor();};
+        Runnable writerThread =  window, mw -> {multithreadWriter(window, mw);};
         
         Thread reader = new Thread(readerThread);
         Thread processor = new Thread(processorThread);
@@ -152,38 +153,6 @@ class Job {
 
 
         this.mw = mw;
-
-        // Go through each input file and process it
-        for (Path inputFile : inputFiles) {
-
-            if(!window.isCancelled())
-            {
-                try{
-                }catch(Exception e){
-                    System.out.println(e);
-                }
-    
-                System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-                
-                Path outputFile;
-                try {
-                    outputFile = processInputFile(inputFile);
-                    // Generate a "success" outcome
-                    window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
-                    this.mw.increaseImagesProcessed();
-                    if(this.mw.sw == null){}
-                    else { this.mw.sw.windowUpdateImagesProcessed();}
-                    this.imageSizeTotal += Files.size(inputFile);
-                } catch (IOException e) {
-                    // Generate a "failure" outcome
-                    window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
-                }
-            }else{
-                // cancelled if not success and no exception
-                window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
-            }
-            window.updateTasksDone();
-        }
 
         updateFilter();
         Platform.runLater(()-> window.updateTimes(this));
@@ -257,7 +226,7 @@ class Job {
                 }
                 break;
             }
-            System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
+            System.err.println("Applying " + this.imgTransform.getName() + " to " + unit.inputFile.toAbsolutePath().toString() + " ...");
             // Process the image
             long processStartTime = System.nanoTime();
             BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(unit.image, null), null);
@@ -305,8 +274,7 @@ class Job {
             writeTime += writeEndTime - writeStartTime;
             unit.writeTime = writeTime;
 
-            try {
-                
+            try { 
                 // Generate a "success" outcome
                 window.displayJob(new ImgTransformOutcome(true, inputFile, Paths.get(outputPath), null));
                 this.mw.increaseImagesProcessed();
