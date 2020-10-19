@@ -80,18 +80,19 @@ class Job {
                 readFunction(this.inputFiles);
             };
             Thread readThread = new Thread(readRun);
-            readThread.start();
 
             Runnable processRun = () -> {
                 processFunction();
             };
             Thread processThread = new Thread(processRun);
-            processThread.start();
 
             Runnable writeRun = () -> {
                 writeFunction(window);
             };
             Thread writeThread = new Thread(writeRun);
+
+            readThread.start();
+            processThread.start();
             writeThread.start();
 
         } else {
@@ -137,16 +138,19 @@ class Job {
         }
     }
 
-    private synchronized void readFunction(List<Path> inputFiles) {
+    private void readFunction(List<Path> inputFiles) {
         this.totalStartTime = System.nanoTime();
         for (Path inputFile : inputFiles) {
 
-            while (this.inputBuffer.size() == this.mw.sliderValue) {
-                try {
-                    this.wait();
-                } catch (InterruptedException e) {
+            synchronized(this)
+            {
+                while (this.inputBuffer.size() == this.mw.sliderValue) {
+                    try {
+                        this.wait();
+                    } catch (InterruptedException e) {
+                    }
                 }
-            }
+            }   
 
             System.err.println("Applying " + this.imgTransform.getName() + " to "
                             + inputFile.toAbsolutePath().toString() + " ...");
@@ -157,9 +161,11 @@ class Job {
                 image = new Image(inputFile.toUri().toURL().toString());
                 long readEndTime = System.nanoTime();
                 this.readTime += readEndTime - readStartTime;
-                this.inputBuffer.addLast(image);
-                this.inputFileBuffer.addLast(inputFile);
-                notifyAll();
+                synchronized(this) {
+                    this.inputBuffer.addLast(image);
+                    this.inputFileBuffer.addLast(inputFile);
+                    notifyAll();
+                }
                 if (image.isError()) {
                     throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString() + " ("
                             + image.getException().toString() + ")");
@@ -174,43 +180,64 @@ class Job {
         }
     }
 
-    private synchronized void processFunction() {
+    private void processFunction() {
         while (this.outputBuffer.size() != this.inputFiles.size()) {
-            while (this.inputBuffer.peek() == null) {
+            synchronized(this) {
+                while (this.inputBuffer.peek() == null) {
+                System.out.println("process1");
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
                 }
+                }
             }
-            Image image = this.inputBuffer.removeFirst();
+            
+            System.out.println("process2");
+            Image image;
+            synchronized(this) {
+                image = this.inputBuffer.removeFirst();
+            }
             // Process the image
             long processStartTime = System.nanoTime();
             BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(image, null), null);
+            image = null;
             long processEndTime = System.nanoTime();
             this.processTime += processEndTime - processStartTime;
-            this.outputBuffer.add(img);
-            notifyAll();
+            synchronized(this) {
+                this.outputBuffer.addLast(img);
+                notifyAll();
+            }
             img = null;
         }
     }
 
     private synchronized void writeFunction(JobWindow window) {
         while (this.imagesDone != this.inputFiles.size()) {
-            while (this.outputBuffer.peek() == null) {
+            synchronized(this) {
+                while (this.outputBuffer.peek() == null) {
+                System.out.println("write1");
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
                 }
             }
+            }
+            
+            System.out.println("write2");
             // Write the image back to a file
-            BufferedImage img = this.outputBuffer.removeFirst();
-            Path inputFile = this.inputFileBuffer.removeFirst();
+            BufferedImage img;
+            Path inputFile;
+            synchronized(this) {
+                img = this.outputBuffer.removeFirst();
+                inputFile = this.inputFileBuffer.removeFirst();
+            }
             String outputPath = this.targetDir + System.getProperty("file.separator") + this.imgTransform.getName() + "_" + inputFile.getFileName();
             try {
                 long writeStartTime = System.nanoTime();
                 OutputStream os = new FileOutputStream(new File(outputPath));
                 ImageOutputStream outputStream = createImageOutputStream(os);
                 ImageIO.write(img, "jpg", outputStream);
+                img = null;
                 long writeEndTime = System.nanoTime();
                 this.writeTime += writeEndTime - writeStartTime;
             } catch (IOException | NullPointerException e) {
