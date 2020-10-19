@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ArrayDeque<E>;
+import java.util.ArrayDeque;
 
 import static javax.imageio.ImageIO.createImageOutputStream;
 
@@ -130,9 +130,9 @@ class Job {
      */
     void executeMultithreaded(JobWindow window, MainWindow mw) {
  
-        Runnable readerThread = window -> {multithreadReader(window);};
+        Runnable readerThread = () -> {multithreadReader(window);};
         Runnable processorThread = () -> {multithreadProcessor();};
-        Runnable writerThread =  window, mw -> {multithreadWriter(window, mw);};
+        Runnable writerThread =  () -> {multithreadWriter(window, mw);};
         
         Thread reader = new Thread(readerThread);
         Thread processor = new Thread(processorThread);
@@ -143,10 +143,14 @@ class Job {
         reader.start();
         processor.start();
         writer.start();
-
-        reader.join();
-        processor.join();
-        writer.join();
+        try {
+            reader.join();
+            processor.join();
+            writer.join();
+            
+        } catch (Exception e) {
+            System.out.println("Error joining the threads");
+        }
         
         long totalEndTime = System.nanoTime();
         this.totalTime = (double)(totalEndTime - totalStartTime);
@@ -178,8 +182,8 @@ class Job {
                         throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString() +
                                 " (" + image.getException().toString() + ")");
                     }
-                } catch (Exception e) {
-                    throw new Exception("Error while reading from " + inputFile.toAbsolutePath().toString());
+                } catch (IOException e) {
+                    throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString());
                 }
                 long readEndTime = System.nanoTime();
                 readTime += readEndTime - readStartTime;
@@ -196,11 +200,11 @@ class Job {
             }
         }
 
-        WorkUnit poisonedApple = new WorkUnit()
+        WorkUnit poisonedApple = new WorkUnit();
         poisonedApple.poisoned = true; 
 
         synchronized(readerAndProcessorLock){
-            readerToProcessor.add(poisonedApple)
+            readerToProcessor.add(poisonedApple);
             this.notifyAll();
         }
     }
@@ -211,17 +215,18 @@ class Job {
      * 
      */
     public void multithreadProcessor() { 
-        while(1){
-            synchronize(readerAndProcessorLock){
+        while(true){
+            WorkUnit unit;
+            synchronized(readerAndProcessorLock){
                 while(readerToProcessor.size() == 0){
-                    wait()
+                    wait();
                 }
-                WorkUnit unit = readerToProcessor.remove()
+                unit = readerToProcessor.remove();
             }
 
             if(unit.poisoned){
-                synchronize(processorAndWriterLock){
-                    processorToWriter.add(unit)
+                synchronized(processorAndWriterLock){
+                    processorToWriter.add(unit);
                     this.notifyAll();
                 }
                 break;
@@ -232,10 +237,10 @@ class Job {
             BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(unit.image, null), null);
             long processEndTime = System.nanoTime();
             processTime += processEndTime - processStartTime;
-            unit.buffferedImage = img;
+            unit.bufferedImage = img;
             unit.processTime = processTime;
 
-            synchronize(processorAndWriterLock){
+            synchronized(processorAndWriterLock){
                 processorToWriter.add(unit);
                 this.notifyAll();
             }
@@ -247,13 +252,14 @@ class Job {
      *
      * 
      */
-    public void multithreadWriter() { 
-        while(1){
-            synchronize(processorAndWriterLock){
+    public void multithreadWriter(JobWindow window, MainWindow mw) { 
+        while(true){
+            WorkUnit unit;
+            synchronized(processorAndWriterLock){
                 while(processorToWriter.size() == 0){
                     wait();
                 }
-                WorkUnit unit = processorToWriter.remove();
+                unit = processorToWriter.remove();
             }
 
             if(unit.poisoned){
@@ -266,7 +272,7 @@ class Job {
             try {
                 OutputStream os = new FileOutputStream(new File(outputPath));
                 ImageOutputStream outputStream = createImageOutputStream(os);
-                ImageIO.write(unit.buffferedImage, "jpg", outputStream);
+                ImageIO.write(unit.bufferedImage, "jpg", outputStream);
             } catch (IOException | NullPointerException e) {
                 throw new IOException("Error while writing to " + outputPath);
             }
@@ -276,14 +282,14 @@ class Job {
 
             try { 
                 // Generate a "success" outcome
-                window.displayJob(new ImgTransformOutcome(true, inputFile, Paths.get(outputPath), null));
+                window.displayJob(new ImgTransformOutcome(true, unit.inputFile, Paths.get(outputPath), null));
                 this.mw.increaseImagesProcessed();
                 if(this.mw.sw == null){}
                 else { this.mw.sw.windowUpdateImagesProcessed();}
-                this.imageSizeTotal += Files.size(inputFile);
+                this.imageSizeTotal += Files.size(unit.inputFile);
             } catch (IOException e) {
                 // Generate a "failure" outcome
-                window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
+                window.displayJob(new ImgTransformOutcome(false, unit.inputFile, null, e));
             }
 
             window.updateTasksDone();
