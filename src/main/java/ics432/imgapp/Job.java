@@ -98,6 +98,7 @@ class Job {
 
         } else {
             // Go through each input file and process it
+            this.totalStartTime = System.nanoTime();
             for (Path inputFile : inputFiles) {
 
                 if (!window.isCancelled()) {
@@ -347,8 +348,6 @@ class Job {
      * @return the output file path
      */
     private Path processInputFile(Path inputFile) throws IOException {
-
-        long totalStartTime = System.nanoTime();
         // Load the image from file
         Image image;
         long readStartTime = System.nanoTime();
@@ -382,9 +381,6 @@ class Job {
         }
         long writeEndTime = System.nanoTime();
         writeTime += writeEndTime - writeStartTime;
-
-        long totalEndTime = System.nanoTime();
-        this.totalTime += (double)(totalEndTime - totalStartTime);
 
         // Success!
         return Paths.get(outputPath);
