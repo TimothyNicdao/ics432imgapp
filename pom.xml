@@ -140,7 +140,7 @@
                 <version>0.0.1</version>
                 <configuration>
                     <options>
-                        <option>-Xmx800M</option>
+                        <option>-Xmx4G</option>
                     </options>
                     <mainClass>ics432.imgapp.ICS432ImgApp</mainClass>
                 </configuration>

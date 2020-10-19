@@ -38,6 +38,7 @@ class Job {
     private ArrayDeque<Path> inputFileBuffer;
     private ArrayDeque<BufferedImage> outputBuffer;
     private int imagesDone = 0;
+    private int imagesProcessed = 0;
 
     // The list of outcomes for each input file
     private final List<ImgTransformOutcome> outcome;
@@ -181,18 +182,26 @@ class Job {
     }
 
     private void processFunction() {
-        while (this.outputBuffer.size() != this.inputFiles.size()) {
+        while (this.imagesProcessed != this.inputFiles.size()) {
             synchronized(this) {
                 while (this.inputBuffer.peek() == null) {
-                System.out.println("process1");
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
                 }
                 }
             }
+
+            synchronized(this)
+            {
+                while (this.outputBuffer.size() == this.mw.sliderValue) {
+                    try {
+                        this.wait();
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }  
             
-            System.out.println("process2");
             Image image;
             synchronized(this) {
                 image = this.inputBuffer.removeFirst();
@@ -215,15 +224,12 @@ class Job {
         while (this.imagesDone != this.inputFiles.size()) {
             synchronized(this) {
                 while (this.outputBuffer.peek() == null) {
-                System.out.println("write1");
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
                 }
             }
             }
-            
-            System.out.println("write2");
             // Write the image back to a file
             BufferedImage img;
             Path inputFile;
