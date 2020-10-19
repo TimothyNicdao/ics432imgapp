@@ -358,13 +358,13 @@ class JobWindow extends Stage {
     public void updateTimes(Job givenJob) {
         if (this.shouldCancel == false) {
           String readText = Double.toString(givenJob.readValue()/1000000000);
-          this.jobReadValue.setText(readText + "ms");
+          this.jobReadValue.setText(readText + "s");
 
           String processText = Double.toString(givenJob.processValue()/1000000000);
-          this.jobProcessValue.setText(processText + "ms");
+          this.jobProcessValue.setText(processText + "s");
 
           String writeText = Double.toString(givenJob.readValue()/1000000000);
-          this.jobWriteValue.setText(writeText + "ms");
+          this.jobWriteValue.setText(writeText + "s");
 
           String totalText = Double.toString(givenJob.totalTime());
           this.jobTotalValue.setText(totalText + "s");
