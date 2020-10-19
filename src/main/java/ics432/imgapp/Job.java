@@ -219,7 +219,12 @@ class Job {
             WorkUnit unit;
             synchronized(readerAndProcessorLock){
                 while(readerToProcessor.size() == 0){
-                    wait();
+                    try {
+                        wait();
+                    } catch (Exception e) {
+                    
+                    }
+                    
                 }
                 unit = readerToProcessor.remove();
             }
@@ -257,7 +262,11 @@ class Job {
             WorkUnit unit;
             synchronized(processorAndWriterLock){
                 while(processorToWriter.size() == 0){
-                    wait();
+                    try {
+                        wait();
+                    } catch (Exception e) {
+                    
+                    }
                 }
                 unit = processorToWriter.remove();
             }
