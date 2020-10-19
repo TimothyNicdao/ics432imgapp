@@ -3,6 +3,8 @@ package ics432.imgapp;
 import javafx.event.Event;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -25,6 +27,7 @@ class MainWindow {
     private final Stage primaryStage;
     private final Button quitButton;
     private final Button showStatsButton;
+    private final CheckBox multiCheck;
     private int pendingJobCount = 0;
     private volatile int jobsExecuted = 0;
     private volatile int imagesProcessed = 0;
@@ -62,7 +65,7 @@ class MainWindow {
 
         showStatsButton = new Button("Show Statistics");
         addFilesButton.setPrefHeight(buttonPreferredHeight);
-        addFilesButton.setId("showStatsButton"); 
+        addFilesButton.setId("showStatsButton");
 
         Button createJobButton = new Button("Create Job");
         createJobButton.setPrefHeight(buttonPreferredHeight);
@@ -72,6 +75,9 @@ class MainWindow {
         quitButton = new Button("Quit");
         quitButton.setId("quitButton"); // for TestFX
         quitButton.setPrefHeight(buttonPreferredHeight);
+
+        multiCheck = new CheckBox("Multithreading");
+
 
         this.fileListWithViewPort = new FileListWithViewPort(
                 windowWidth  * 0.98,
@@ -112,16 +118,16 @@ class MainWindow {
                 (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
-                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()), this);
-                
+                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()), this, multiCheck.isSelected());
+
                 jw.addCloseListener(() -> {
-                    
+
                     this.pendingJobCount -= 1;
                     if (this.pendingJobCount == 0) {
                         this.quitButton.setDisable(false);
                     }
                 });
-                
+
         });
 
         //Construct the layout
@@ -134,6 +140,7 @@ class MainWindow {
         row.getChildren().add(createJobButton);
         row.getChildren().add(showStatsButton);
         row.getChildren().add(quitButton);
+        row.getChildren().add(multiCheck);
         layout.getChildren().add(row);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
@@ -205,8 +212,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public long getJobsExecuted() { 
-        return this.jobsExecuted; 
+    public long getJobsExecuted() {
+        return this.jobsExecuted;
     }
 
     /**
@@ -214,8 +221,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public long getImagesProcessed() { 
-        return this.imagesProcessed; 
+    public long getImagesProcessed() {
+        return this.imagesProcessed;
     }
 
     /**
@@ -223,8 +230,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public Double getComputeSpeedInvert() { 
-        return this.computeSpeedInvert; 
+    public Double getComputeSpeedInvert() {
+        return this.computeSpeedInvert;
     }
 
     /**
@@ -246,8 +253,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public Double getComputeSpeedOil() { 
-        return this.computeSpeedOil; 
+    public Double getComputeSpeedOil() {
+        return this.computeSpeedOil;
     }
 
     /**
@@ -267,8 +274,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public Double getComputeSpeedSolarize() { 
-        return this.computeSpeedSolarize; 
+    public Double getComputeSpeedSolarize() {
+        return this.computeSpeedSolarize;
     }
 
     /**

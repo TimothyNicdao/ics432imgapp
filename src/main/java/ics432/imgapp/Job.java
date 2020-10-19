@@ -64,9 +64,16 @@ class Job {
     /**
      * Method to execute the imgTransform job
      */
-    void execute(JobWindow window, MainWindow mw) {
-        
+    void execute(JobWindow window, MainWindow mw, boolean m_on) {
+
         this.mw = mw;
+
+        //remove later
+        if(m_on == true){
+          System.err.println("Multithreading mode is on");
+        } else {System.err.println("Multithreading mode is off");}
+        //remove later
+
 
         // Go through each input file and process it
         for (Path inputFile : inputFiles) {
@@ -77,9 +84,9 @@ class Job {
                 }catch(Exception e){
                     System.out.println(e);
                 }
-    
+
                 System.err.println("Applying " + this.imgTransform.getName() + " to " + inputFile.toAbsolutePath().toString() + " ...");
-    
+
                 Path outputFile;
                 try {
                     outputFile = processInputFile(inputFile);
@@ -116,11 +123,11 @@ class Job {
     }
 
     /**
-     * Update proper filter 
+     * Update proper filter
      *
      * @return The read time of the job
      */
-    public void updateFilter() { 
+    public void updateFilter() {
         this.imageSizeTotal = this.imageSizeTotal/100000;
         this.totalTime = this.totalTime/1000000000;
         this.computeSpeed = this.imageSizeTotal/this.totalTime;
@@ -144,8 +151,8 @@ class Job {
      *
      * @return The read time of the job
      */
-    public long readValue() { 
-        return readTime; 
+    public long readValue() {
+        return readTime;
     }
 
     /**
@@ -153,8 +160,8 @@ class Job {
      *
      * @return The process time of the job
      */
-    public long processValue() { 
-        return processTime; 
+    public long processValue() {
+        return processTime;
     }
 
     /**
@@ -162,8 +169,8 @@ class Job {
      *
      * @return The write time of the job
      */
-    public long writeValue() { 
-        return writeTime; 
+    public long writeValue() {
+        return writeTime;
     }
 
     /**
