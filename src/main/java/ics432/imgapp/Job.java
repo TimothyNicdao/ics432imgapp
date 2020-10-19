@@ -117,22 +117,47 @@ class Job {
                 }
                 window.updateTasksDone();
             }
-
+            
             updateFilter();
             Platform.runLater(()-> window.updateTimes(this));
             Platform.runLater(()-> window.jobCompleted());
         }
     }
-
-
+    
+    
     /**
      * Multithreaded version of execute
      */
     void executeMultithreaded(JobWindow window, MainWindow mw) {
- 
-        Runnable readerThread = () -> {multithreadReader(window);};
-        Runnable processorThread = () -> {multithreadProcessor();};
-        Runnable writerThread =  () -> {multithreadWriter(window, mw);};
+        
+        this.mw = mw;
+
+        Runnable readerThread = () -> { 
+            try {
+                multithreadReader(window);
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        };
+
+
+
+        Runnable processorThread = () -> {
+            try {
+                multithreadProcessor(); 
+            } catch (Exception e) {
+                System.out.println("Error in multithreaded processor");
+            }
+        }; 
+
+
+        Runnable writerThread =  () -> {
+            try {
+                multithreadWriter(window, mw);
+            } catch (Exception e) {
+                System.out.println("Error in multithreaded writer");
+            }
+        };
         
         Thread reader = new Thread(readerThread);
         Thread processor = new Thread(processorThread);
@@ -156,7 +181,6 @@ class Job {
         this.totalTime = (double)(totalEndTime - totalStartTime);
 
 
-        this.mw = mw;
 
         updateFilter();
         Platform.runLater(()-> window.updateTimes(this));
@@ -168,7 +192,7 @@ class Job {
      *
      * 
      */
-    public void multithreadReader(JobWindow window) { 
+    public void multithreadReader(JobWindow window) throws IOException  { 
         for (Path inputFile : inputFiles) {
 
             if(!window.isCancelled())
@@ -176,6 +200,7 @@ class Job {
 
                 Image image;
                 long readStartTime = System.nanoTime();
+                System.out.println("Reading from" + inputFile.toAbsolutePath().toString());
                 try {
                     image = new Image(inputFile.toUri().toURL().toString());
                     if (image.isError()) {
@@ -186,16 +211,16 @@ class Job {
                     throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString());
                 }
                 long readEndTime = System.nanoTime();
-                readTime += readEndTime - readStartTime;
-                
+                readTime += (double)((readEndTime - readStartTime)/1000);
+                System.out.println("Reading is done from" + inputFile.toAbsolutePath().toString());
                 WorkUnit unit = new WorkUnit();
                 unit.inputFile = inputFile;
                 unit.image = image;
                 unit.readTime = readTime;
-
-                synchronized(readerAndProcessorLock){
+                System.out.println("Reading to Processor Pass" );
+                synchronized(readerToProcessor){
                     readerToProcessor.add(unit);
-                    this.notifyAll();
+                    readerToProcessor.notifyAll();
                 }
             }
         }
@@ -203,9 +228,9 @@ class Job {
         WorkUnit poisonedApple = new WorkUnit();
         poisonedApple.poisoned = true; 
 
-        synchronized(readerAndProcessorLock){
+        synchronized(readerToProcessor){
             readerToProcessor.add(poisonedApple);
-            this.notifyAll();
+            readerToProcessor.notifyAll();
         }
     }
 
@@ -214,25 +239,30 @@ class Job {
      *
      * 
      */
-    public void multithreadProcessor() { 
+    public void multithreadProcessor() throws IOException  { 
+        WorkUnit unit;
+
         while(true){
-            WorkUnit unit;
-            synchronized(readerAndProcessorLock){
+
+            synchronized(readerToProcessor){
                 while(readerToProcessor.size() == 0){
                     try {
-                        wait();
+                        System.out.println("Gonna wait" );
+                        readerToProcessor.wait();
                     } catch (Exception e) {
-                    
+                        System.out.println(e);
                     }
                     
                 }
+                System.out.println("Done wait will process" );
                 unit = readerToProcessor.remove();
             }
-
+            
+            System.out.println("Starting to process");
             if(unit.poisoned){
-                synchronized(processorAndWriterLock){
+                synchronized(processorToWriter){
                     processorToWriter.add(unit);
-                    this.notifyAll();
+                    processorToWriter.notifyAll();
                 }
                 break;
             }
@@ -241,13 +271,14 @@ class Job {
             long processStartTime = System.nanoTime();
             BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(unit.image, null), null);
             long processEndTime = System.nanoTime();
-            processTime += processEndTime - processStartTime;
+            processTime += (double)((processEndTime - processStartTime)/1000);
+
             unit.bufferedImage = img;
             unit.processTime = processTime;
 
-            synchronized(processorAndWriterLock){
+            synchronized(processorToWriter){
                 processorToWriter.add(unit);
-                this.notifyAll();
+                processorToWriter.notifyAll();
             }
         }
     }
@@ -257,13 +288,13 @@ class Job {
      *
      * 
      */
-    public void multithreadWriter(JobWindow window, MainWindow mw) { 
+    public void multithreadWriter(JobWindow window, MainWindow mw) throws IOException  { 
         while(true){
             WorkUnit unit;
-            synchronized(processorAndWriterLock){
+            synchronized(processorToWriter){
                 while(processorToWriter.size() == 0){
                     try {
-                        wait();
+                        processorToWriter.wait();
                     } catch (Exception e) {
                     
                     }
@@ -286,7 +317,8 @@ class Job {
                 throw new IOException("Error while writing to " + outputPath);
             }
             long writeEndTime = System.nanoTime();
-            writeTime += writeEndTime - writeStartTime;
+            writeTime += (double)((writeEndTime - writeStartTime)/1000);
+
             unit.writeTime = writeTime;
 
             try { 
