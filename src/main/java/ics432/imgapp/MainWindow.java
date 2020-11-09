@@ -1,15 +1,17 @@
 package ics432.imgapp;
 
 import javafx.event.Event;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Slider;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -26,24 +28,15 @@ class MainWindow {
 
     private final Stage primaryStage;
     private final Button quitButton;
-    private final Button showStatsButton;
-    private CheckBox mtcb = new CheckBox();
-    private Slider imageSlider = new Slider();
     private int pendingJobCount = 0;
-    private volatile int jobsExecuted = 0;
-    private volatile int imagesProcessed = 0;
-    private volatile ArrayList<Double> computeSpeedInvertArr = new ArrayList<Double>();
-    private volatile Double computeSpeedInvert = 0.0;
-    private volatile ArrayList<Double> computeSpeedOilArr = new ArrayList<Double>();
-    private volatile Double computeSpeedOil = 0.0;
-    private volatile ArrayList<Double> computeSpeedSolarizeArr = new ArrayList<Double>();
-    private volatile Double computeSpeedSolarize = 0.0;
     private final FileListWithViewPort fileListWithViewPort;
+    private StatisticsWindow statisticsWindow = null;
     private int jobID = 0;
-    private Double updatedValue;
-    public StatisticsWindow sw;
-    public boolean mtcbSelected = false;
-    public Double sliderValue = 2.0;
+    private CheckBox multithreadingCheckBox = null;
+    private Slider memorySlider;
+
+
+
 
     /**
      * Constructor
@@ -62,27 +55,24 @@ class MainWindow {
         this.primaryStage.setOnCloseRequest(Event::consume);
 
         // Create all widgets
-
-        imageSlider.setPrefWidth(300.0);
-        imageSlider.setMax(40.0);
-        imageSlider.setMin(2.0);
-        imageSlider.setShowTickMarks(true);
-        imageSlider.setShowTickLabels(true);
-        imageSlider.setMajorTickUnit(2.0);
-        imageSlider.setMinorTickCount(0);
-        imageSlider.setBlockIncrement(2.0);
-        imageSlider.setSnapToTicks(true);
-
-        mtcb.setText("Multithreading");
-        mtcb.setSelected(false);
-
         Button addFilesButton = new Button("Add Image Files");
         addFilesButton.setPrefHeight(buttonPreferredHeight);
         addFilesButton.setId("addFilesButton"); // for TestFX
 
-        showStatsButton = new Button("Show Statistics");
-        addFilesButton.setPrefHeight(buttonPreferredHeight);
-        addFilesButton.setId("showStatsButton"); 
+        Button viewStatsButton = new Button("View Stats");
+        viewStatsButton.setPrefHeight(buttonPreferredHeight);
+        viewStatsButton.setId("viewStatsButton"); // for TestFX
+
+        multithreadingCheckBox = new CheckBox("Multithreading");
+        multithreadingCheckBox.setSelected(true);
+
+        this.memorySlider = new Slider(2, 40, 2);
+        this.memorySlider.setPrefWidth(350);
+        this.memorySlider.setBlockIncrement(2);
+        this.memorySlider.setMajorTickUnit(2);
+        this.memorySlider.setMinorTickCount(0);
+        this.memorySlider.setShowTickLabels(true);
+        this.memorySlider.setSnapToTicks(true);
 
         Button createJobButton = new Button("Create Job");
         createJobButton.setPrefHeight(buttonPreferredHeight);
@@ -95,78 +85,76 @@ class MainWindow {
 
         this.fileListWithViewPort = new FileListWithViewPort(
                 windowWidth  * 0.98,
-                windowHeight - 3 * buttonPreferredHeight - 3 * 5,
+                windowHeight - 3 * buttonPreferredHeight,
                 true);
 
-        // Listen for the "nothing is selected" property of the widget
+        // Listen for the "is empty" property of the widget
         // to disable the createJobButton dynamically
-        this.fileListWithViewPort.addNoSelectionListener(createJobButton::setDisable);
+        this.fileListWithViewPort.addEmptinessListener(createJobButton::setDisable);
 
         // Set actions for all widgets
         addFilesButton.setOnAction(e -> addFiles(selectFilesWithChooser()));
 
-        showStatsButton.setOnAction(e -> {
-            this.showStatsButton.setDisable(true);
-            StatisticsWindow sw = new StatisticsWindow(
-                (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
-                this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
-                this.primaryStage.getY() + 50 + this.pendingJobCount * +10, this);
+        viewStatsButton.setOnAction(e -> {
 
-            this.sw = sw;
-                sw.addCloseListener(() -> {
-                    this.showStatsButton.setDisable(false);
-                });
+            viewStatsButton.setDisable(true);
+            this.statisticsWindow = new StatisticsWindow(
+                    350, 125,
+                    this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
+                    this.primaryStage.getY() + 30 + this.pendingJobCount * 10);
+
+            this.statisticsWindow.addCloseListener(() -> {
+                viewStatsButton.setDisable(false);
+            });
         });
 
         quitButton.setOnAction(e -> {
             // If the button is enabled, it's fine to quit
-            this.primaryStage.close();
 
+            if (this.statisticsWindow != null)  {
+                this.statisticsWindow.close();
+            }
+            this.primaryStage.close();
         });
 
         createJobButton.setOnAction(e -> {
             this.quitButton.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
-            this.sliderValue = this.imageSlider.getValue();
-
-            if (mtcb.isSelected()) {
-                mtcbSelected = true;
-            } else {
-                mtcbSelected = false;
-            }
-
             JobWindow jw = new JobWindow(
-                (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
-                this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
-                this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
-                this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()), this);
-                jw.addCloseListener(() -> {
-                    
-                    this.pendingJobCount -= 1;
-                    if (this.pendingJobCount == 0) {
-                        this.quitButton.setDisable(false);
-                    }
-                });
-                
+                    (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
+                    this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
+                    this.primaryStage.getY() + 50 + this.pendingJobCount * 10,
+                    this.jobID,
+                    new  ArrayList<>(this.fileListWithViewPort.getSelection()),
+                    this.multithreadingCheckBox.isSelected(),
+                    16);
+
+            jw.addCloseListener(() -> {
+                this.pendingJobCount -= 1;
+                if (pendingJobCount == 0) {
+                    this.quitButton.setDisable(false);
+                }
+            });
         });
 
         //Construct the layout
         VBox layout = new VBox(5);
 
-        HBox row1 = new HBox(5);
-        row1.getChildren().add(addFilesButton);
-        row1.getChildren().add(mtcb);
-        row1.getChildren().add(imageSlider);
-        layout.getChildren().add(row1);
+        HBox toprow = new HBox(10 );
+        toprow.setFillHeight(true);          // Added this
+        toprow.setAlignment(Pos.CENTER_LEFT);
+
+        toprow.getChildren().add(addFilesButton);
+        toprow.getChildren().add(viewStatsButton);
+        layout.getChildren().add(toprow);
 
         layout.getChildren().add(this.fileListWithViewPort);
 
-        HBox row2 = new HBox(5);
-        row2.getChildren().add(createJobButton);
-        row2.getChildren().add(showStatsButton);
-        row2.getChildren().add(quitButton);
-        layout.getChildren().add(row2);
+        HBox row = new HBox(10);
+        row.getChildren().add(createJobButton);
+        row.getChildren().add(quitButton);
+        layout.getChildren().add(row);
 
         Scene scene = new Scene(layout, windowWidth, windowHeight);
         this.primaryStage.setScene(scene);
@@ -175,7 +163,6 @@ class MainWindow {
         // Make this primaryStage non closable
         this.primaryStage.setOnCloseRequest(Event::consume);
 
-        //  Show it on  screen.
         this.primaryStage.show();
     }
 
@@ -191,7 +178,7 @@ class MainWindow {
         fileChooser.setTitle("Choose Image Files");
         fileChooser.getExtensionFilters().addAll(
                 new ExtensionFilter("Jpeg Image Files", "*.jpg", "*.jpeg", "*.JPG", "*.JPEG"));
-        List<File>  selectedFiles = fileChooser.showOpenMultipleDialog(this.primaryStage);
+        List<File>  selectedFiles = fileChooser.showOpenMultipleDialog(primaryStage);
 
         if (selectedFiles == null) {
             return new ArrayList<>();
@@ -213,106 +200,5 @@ class MainWindow {
             this.fileListWithViewPort.addFiles(files);
         }
     }
-
-    /**
-     * Method to update executed jobs number
-     *
-     * @param files The list of files
-     */
-    public synchronized void increaseExecutedJobs() {
-        this.jobsExecuted++;
-    }
-
-    /**
-     * Method to update executed jobs number
-     *
-     * @param files The list of files
-     */
-    public synchronized void increaseImagesProcessed() {
-        imagesProcessed++;
-    }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public long getJobsExecuted() { 
-        return this.jobsExecuted; 
-    }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public long getImagesProcessed() { 
-        return this.imagesProcessed; 
-    }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public Double getComputeSpeedInvert() { 
-        return this.computeSpeedInvert; 
-    }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public void updateInvert(Double value) {
-       this.computeSpeedInvertArr.add(value);
-       this.updatedValue = 0.0;
-       for (int i = 0; i < this.computeSpeedInvertArr.size(); i++) {
-           this.updatedValue = this.updatedValue + this.computeSpeedInvertArr.get(i);
-       }
-       this.computeSpeedInvert = this.updatedValue/this.computeSpeedInvertArr.size();
-    }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public Double getComputeSpeedOil() { 
-        return this.computeSpeedOil; 
-    }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public void updateOil(Double value) {
-        this.computeSpeedOilArr.add(value);
-        this.updatedValue = 0.0;
-        this.computeSpeedOilArr.forEach((item) -> this.updatedValue += item);
-        this.computeSpeedOil = this.updatedValue/this.computeSpeedOilArr.size();
-     }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public Double getComputeSpeedSolarize() { 
-        return this.computeSpeedSolarize; 
-    }
-
-    /**
-     * Getter for processTime
-     *
-     * @return The process time of the job
-     */
-    public void updateSolarize(Double value) {
-        this.computeSpeedSolarizeArr.add(value);
-        this.updatedValue = 0.0;
-        this.computeSpeedSolarizeArr.forEach((item) -> this.updatedValue += item);
-        this.computeSpeedSolarize = this.updatedValue/this.computeSpeedSolarizeArr.size();
-     }
 
 }

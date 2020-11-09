@@ -1,136 +1,81 @@
 package ics432.imgapp;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * A class that implements a "Job Window" on which a user
- * can launch a Job
+ * A class that implements a "Statistics Window" that displays
+ * useful information
  */
 
 class StatisticsWindow extends Stage {
-
-    private final Button closeButton;
-    private final Button cancelButton;
-    private volatile Label jobsExecutedValue = new Label("");
-    private volatile Label imagesProcessedValue = new Label("");
-    private volatile Label computeSpeedInvertValue = new Label("");
-    private volatile Label computeSpeedOilValue = new Label("");
-    private volatile Label computeSpeedSolarizeValue = new Label("");
-    private Label unitsLabel1 = new Label("");
-    private Label unitsLabel2 = new Label("");
-    private Label unitsLabel3 = new Label("");
-    private MainWindow mw;
 
     /**
      * Constructor
      *
      * @param windowWidth      The window's width
      * @param windowHeight     The window's height
-     * @param X          The horizontal position of the statistics window
-     * @param Y          The vertical position of the statistics window
-     * @param mainWindow        The main window
+     * @param X          The horizontal position of the job window
+     * @param Y          The vertical position of the job window
      */
-    StatisticsWindow(int windowWidth, int windowHeight, double X, double Y, MainWindow mainWindow) {
-
-        this.mw = mainWindow;
-
-        // The  preferred height of buttons
-        double buttonPreferredHeight = 27.0;
+    StatisticsWindow(int windowWidth, int windowHeight, double X, double Y) {
 
         // Set up the window
         this.setX(X);
         this.setY(Y);
-        this.setTitle("Statistics Window");
+        this.setTitle("Job Statistics");
         this.setResizable(false);
 
-        // Create all sub-widgets in the window
-        Label targetDirLabel = new Label("Target Directory:");
-        targetDirLabel.setPrefWidth(115);
+        // Create all widgets in the window
 
+        List<Util.PairOfStrings> lineSpecs = new ArrayList<>();
 
-        Label jobsExecutedLabel = new Label("Jobs Executed: ");
-        this.jobsExecutedValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getJobsExecuted()).asString());
-        
-        Label imagesProcessedLabel = new Label("Images Processed: ");
-        this.imagesProcessedValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getImagesProcessed()).asString());
+        lineSpecs.add(new Util.PairOfStrings("Number of completed jobs", "num_completed_jobs"));
+        lineSpecs.add(new Util.PairOfStrings("Number of processed images", "num_processed_images"));
+        ICS432ImgApp.filters.forEach((f) -> {
+            lineSpecs.add(new Util.PairOfStrings(f.getName() + " compute speed (MB/sec)",
+                    "filter_speed_" + f.getName()));
+        });
 
-        Label computeSpeedInvertLabel = new Label("Invert Filter Compute Speed: ");
-        this.computeSpeedInvertValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedInvert()).asString());
-
-        Label computeSpeedOilLabel = new Label("Oil Filter Compute Speed: ");
-        this.computeSpeedOilValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedOil()).asString());
-
-        Label computeSpeedSolarizeLabel = new Label("Solarize Filter Compute Speed: ");
-        this.computeSpeedSolarizeValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedSolarize()).asString());
-
-        this.unitsLabel1.setText(" Mb/s");
-        this.unitsLabel2.setText(" Mb/s");
-        this.unitsLabel3.setText(" Mb/s");
-
-        // Create a "Close" button
-        this.closeButton = new Button("Close");
-        this.closeButton.setId("closeButton");
-        this.closeButton.setPrefHeight(buttonPreferredHeight);
-
-        // Create a "cancel" button
-        this.cancelButton = new Button("Cancel");
-        this.cancelButton.setId("cancelButton");
-        this.cancelButton.setPrefHeight(buttonPreferredHeight);
-        this.cancelButton.setDisable(true);
-
-        this.closeButton.setOnAction(f -> this.close());
-        
-        // Build the scene
         VBox layout = new VBox(5);
 
-        HBox row1 = new HBox(5);
-        row1.getChildren().add(jobsExecutedLabel);
-        row1.getChildren().add(jobsExecutedValue);
-        layout.getChildren().add(row1);
+        lineSpecs.forEach((s)-> {
+            HBox row = new HBox();
+            Label prefixLabel = new Label(" " + s.first + ":");
+            prefixLabel.setPrefWidth(250);
+            prefixLabel.setFont(new Font(16));
+            row.getChildren().add(prefixLabel);
+            Text valueLabel = new Text(ICS432ImgApp.statistics.toString(s.second));
+            valueLabel.setFont(new Font("Arial Bold", 16));
+            valueLabel.setId(s.second);  //  For TestFX
 
-        HBox row2 = new HBox(5);
-        row2.getChildren().add(imagesProcessedLabel);
-        row2.getChildren().add(imagesProcessedValue);
-        layout.getChildren().add(row2);
+            row.getChildren().add(valueLabel);
+            layout.getChildren().add(row);
+            ICS432ImgApp.statistics.content.get(s.second).addListener((observable, oldValue, newValue) -> {
+                        Platform.runLater(() -> {
+                            valueLabel.setText(ICS432ImgApp.statistics.toString(s.second));
+                        });
+                    }
+            );
+        });
 
-        HBox row3 = new HBox(5);
-        row3.getChildren().add(computeSpeedInvertLabel);
-        row3.getChildren().add(computeSpeedInvertValue);
-        row3.getChildren().add(unitsLabel1);
-        layout.getChildren().add(row3);
-
-        HBox row4 = new HBox(5);
-        row4.getChildren().add(computeSpeedOilLabel);
-        row4.getChildren().add(computeSpeedOilValue);
-        row4.getChildren().add(unitsLabel2);
-        layout.getChildren().add(row4);
-
-        HBox row5 = new HBox(5);
-        row5.getChildren().add(computeSpeedSolarizeLabel);
-        row5.getChildren().add(computeSpeedSolarizeValue);
-        row5.getChildren().add(unitsLabel3);
-        layout.getChildren().add(row5);
-
-        HBox row6 = new HBox(5);
-        row6.getChildren().add(closeButton);
-        row6.getChildren().add(cancelButton);
-        layout.getChildren().add(row6);
-
+        // Build the scene
         Scene scene = new Scene(layout, windowWidth, windowHeight);
 
         // Pop up the new window
         this.setScene(scene);
         this.toFront();
         this.show();
-
     }
 
     /**
@@ -139,27 +84,8 @@ class StatisticsWindow extends Stage {
      * @param listener The listener method
      */
     public void addCloseListener(Runnable listener) {
-        this.addEventHandler(WindowEvent.WINDOW_HIDDEN, (event) -> listener.run());
+        this.addEventHandler(WindowEvent.WINDOW_HIDDEN, (event) -> {
+            listener.run();
+        });
     }
-    
-    public synchronized void windowUpdateJobsExecuted(){
-        Platform.runLater(() -> this.jobsExecutedValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getJobsExecuted()).asString()));
-    }
-    
-    public synchronized void windowUpdateImagesProcessed(){
-        Platform.runLater(() -> this.imagesProcessedValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getImagesProcessed()).asString()));
-    }
-
-    public synchronized void windowUpdateInvert(){
-        Platform.runLater(() -> this.computeSpeedInvertValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedInvert()).asString()));
-    }
-
-    public synchronized void windowUpdateOil(){
-        Platform.runLater(() -> this.computeSpeedOilValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedOil()).asString()));
-    }
-
-    public synchronized void windowUpdateSolarize(){
-        Platform.runLater(() -> this.computeSpeedSolarizeValue.textProperty().bind(new SimpleDoubleProperty(this.mw.getComputeSpeedSolarize()).asString()));
-    }
-
 }

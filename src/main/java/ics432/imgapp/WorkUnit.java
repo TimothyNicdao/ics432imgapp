@@ -1,0 +1,76 @@
+package ics432.imgapp;
+
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
+
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static javax.imageio.ImageIO.createImageOutputStream;
+
+/**
+ * Class that implement a work unit abstraction
+ */
+public class WorkUnit {
+
+    final public ImgTransform imgTransform;
+    final public Path inputFile;
+    final public Path targetDir;
+    public Path outputFile;
+    public Image inputImage;
+    public BufferedImage processedImage;
+
+
+    public WorkUnit(ImgTransform imgTransform, Path inputFile, Path targetDir) {
+        this.imgTransform = imgTransform;
+        this.inputFile = inputFile;
+        this.targetDir = targetDir;
+        this.outputFile = null;
+        this.inputImage = null;
+        this.processedImage = null;
+    }
+
+    public void readInputFile() throws IOException {
+        // Load the image from file
+        try {
+            this.inputImage = new Image(inputFile.toUri().toURL().toString());
+            if (this.inputImage.isError()) {
+                throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString() +
+                        " (" + this.inputImage.getException().toString() + ")");
+            }
+        } catch (IOException e) {
+            this.inputImage = null;
+            throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString());
+        }
+    }
+
+    public void processImage() {
+        if (this.inputImage != null) {
+            this.processedImage = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(this.inputImage, null), null);
+            this.inputImage = null; // freeing  memory
+        }
+    }
+
+    public  void writeImage() throws IOException {
+        if (this.processedImage != null) {
+            String outputPath = this.targetDir + "/" + this.imgTransform.getName() + "_" + this.inputFile.getFileName();
+            try {
+                this.outputFile = Paths.get(outputPath);
+                OutputStream os = new FileOutputStream(new File(outputPath));
+                ImageOutputStream outputStream = createImageOutputStream(os);
+                ImageIO.write(this.processedImage, "jpg", outputStream);
+            } catch (IOException | NullPointerException e) {
+                throw new IOException("Error while writing to " + outputPath);
+            }
+            this.processedImage = null; // freeing memory
+        }
+    }
+
+}

@@ -21,12 +21,26 @@ class Util {
      */
     static Image loadImageFromResourceFile(String srcSubDir, String filename) {
 
+        Image image = null;
         Path path = Paths.get("src", srcSubDir, "resources", filename).toAbsolutePath();
         return loadImageFromPath(path);
 
     }
 
-    /**
+    // /**
+    //  * Helper method to load an image from a /tmp/*.jpg file
+    //  *
+    //  * @param filename The resource file name
+    //  *
+    //  * @return an image
+    //  */
+    // static Image loadImageFromTmp(String filename) {
+
+    //     Image image = null;
+    //     Path path = Paths.get("/tmp/", filename).toAbsolutePath();
+    //     return loadImageFromPath(path);
+    // }
+        /**
      * Helper method to load an image from a jpg file
      *
      * @param dirPath  the directory absolute path
@@ -44,19 +58,30 @@ class Util {
      *
      * @param path The path
      *
-     * @return an image or null if there was an error
+     * @return an image or null if there is an error
      */
-    private static Image loadImageFromPath(Path path) {
+    static Image loadImageFromPath(Path path) {
 
+        Image image = null;
         try {
-            Image image = new Image(path.toUri().toURL().toString());
-            if (image.isError()) {
-                return null;
-            }
-            return image;
+            image = new Image(path.toUri().toURL().toString());
         } catch (MalformedURLException e) {
             return null;
         }
+        if (image.isError()) {
+            return null;
+        }
+        return image;
     }
 
+    /**
+     *  Helper class
+     */
+    public static class PairOfStrings {
+        public String first, second;
+        PairOfStrings(String first, String second) {
+            this.first = first;
+            this.second = second;
+        }
+    }
 }

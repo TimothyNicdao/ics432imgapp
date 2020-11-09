@@ -14,17 +14,16 @@ import javafx.scene.layout.HBox;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 /**
  * A helper class that implements a widget that shows
  * an image file list on the left-hand side, and the actual
- * image that correspond to the selected file on the right-hand side (in a "viewport").
- * The user can navigate through the entries using the mouse or the keyboard's
- * arrow keys. Entries can be selected using shift, and ^a selects all entries.
+ * image that correspond to the selected file on the right-hand side.
  * If the widget is set to be "editable", then entries can be
- * removed by the user by using the backspace key. This class extends HBox.
+ * removed by the user by using the backspace key.
  */
 class FileListWithViewPort extends HBox {
 
@@ -35,120 +34,109 @@ class FileListWithViewPort extends HBox {
     private final double width;
     private final Image emptyImage;
     private final Image brokenImage;
-    private final SimpleBooleanProperty nothingIsSelected;
+    private final SimpleBooleanProperty isEmpty;
     private final boolean isEditable;
 
     /**
      * Constructor
      *
-     * @param width      The widget's width in pixels
-     * @param height     The widget's height in pixels
+     * @param width      The widget's width
+     * @param height     The widget's height
      * @param isEditable Whether the widget is editable
      */
     FileListWithViewPort(double width, double height,
                          boolean isEditable) {
 
-        // Set the vertical spacing between items added to the widget
         this.setSpacing(5);
 
-        // Set the max geometry of the display
-        this.setMaxHeight(height);
-        this.setMaxWidth(width);
+        double listFraction = 0.4; // Which fraction of the width is the list (the other being the viewport)
 
-        // Which fraction of the width is the list (the other being the viewport)
-        double listFraction = 0.4;
-
-        // Set instance variables based on constructor parameters
         this.height = height;
         this.width = width;
         this.isEditable = isEditable;
+        this.isEmpty = new SimpleBooleanProperty(true);  // a boolean that's "observable"
 
-        // Create the boolean that  are "observable", i.e., listeners can be added
-        this.nothingIsSelected = new SimpleBooleanProperty(true);
-
-        // Get references to the empty and broken images (in the resources directory)
+        // Get references to the empty and broken images
         this.emptyImage = Util.loadImageFromResourceFile("main","empty-image.png");
         this.brokenImage = Util.loadImageFromResourceFile("main","broken-image.png");
 
-        // Create the left-hand side file list (a ListView of an observable list of Path objects)
-        this.availableFiles = FXCollections.observableArrayList();
-        this.availableFilesView = new ListView<>(availableFiles);
-        // Set what is displayed in the ListView for each entry, if any
-        this.availableFilesView.setCellFactory(param -> new ListCell<>() {
+        // Create all widgets
+        availableFiles = FXCollections.observableArrayList();
+        availableFilesView = new ListView<>(availableFiles);
+        availableFilesView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(Path item, boolean empty) {
                 Platform.runLater(() -> {
                     super.updateItem(item, empty);
+
                     if (empty || item == null) {
-                        setText(null); // nothing
+                        setText(null);
                     } else {
-                        setText(item.toAbsolutePath().toString());  // the file path
+                        setText(item.toAbsolutePath().toString());
                     }
                 });
             }
         });
 
-        // Allow for multiple selections
-        this.availableFilesView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        // Set geometry (a bit paranoid)
-        this.availableFilesView.setPrefWidth(width * listFraction);
-        this.availableFilesView.setMinWidth(width * listFraction);
-        this.availableFilesView.setMaxWidth(width * listFraction);
-        this.availableFilesView.setPrefHeight(height);
-        this.availableFilesView.setMaxHeight(height);
+        availableFilesView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        availableFilesView.setPrefWidth(width * listFraction);
+        availableFilesView.setMinWidth(width * listFraction);
+        availableFilesView.setMaxWidth(width * listFraction);
+        availableFilesView.setPrefHeight(height);
+        availableFilesView.setMaxHeight(height);
 
-        // Create an image viewport as an ImageView widget
-        this.iv = new ImageView();
-        this.iv.setPreserveRatio(true);  // make aspect ratio of images preserved
-        displayInViewPort(emptyImage); // initialize it to display the "empty" image
+        // Create an image viewport
+        iv = new ImageView();
+        iv.setPreserveRatio(true);
+        displayInViewPort(emptyImage);
 
-        // Set viewport's behavior when list item is clicked
-        this.availableFilesView.setOnMouseClicked(e -> Platform.runLater(() -> {
-            // Display the selected image
-            displayInViewPort(this.availableFilesView.getSelectionModel().getSelectedItem());
-            // Set the observable "nothing is selected" boolean to what it should be
-            this.nothingIsSelected.setValue(this.availableFilesView.getSelectionModel().getSelectedItems().isEmpty());
+        // Update viewport when item is clicked
+        availableFilesView.setOnMouseClicked(e -> {
+            Platform.runLater(() -> {
+                displayInViewPort(availableFilesView.getSelectionModel().getSelectedItem());
+                this.isEmpty.setValue(availableFilesView.getSelectionModel().getSelectedItem() == null);
+            });
+        });
 
-        }));
+        // Update viewport when item is scrolled to or items are deleted
+        availableFilesView.setOnKeyPressed(e -> {
 
-        // Set viewport's behavior when user uses the keyboard
-        this.availableFilesView.setOnKeyPressed(e -> {
-
-            // If the key pressed was BACK_SPACE and the list is editable, remove items
+            // If the key is BACK_SPACE and the list is editable, remove items
             if (this.isEditable && (e.getCode() == KeyCode.BACK_SPACE)) {
 
-                int to_select_after = Math.max(0, this.availableFilesView.getSelectionModel().getSelectedIndices().get(0) - 1);
-                this.availableFiles.removeAll(this.availableFilesView.getSelectionModel().getSelectedItems());
-                if (this.availableFiles.size() > 0) {
-                    this.availableFilesView.getSelectionModel().select(to_select_after);
+                int to_select_after = Math.max(0, availableFilesView.getSelectionModel().getSelectedIndices().get(0) - 1);
+                availableFiles.removeAll(availableFilesView.getSelectionModel().getSelectedItems());
+                if (availableFiles.size() > 0) {
+                    availableFilesView.getSelectionModel().select(to_select_after);
                 }
+                this.isEmpty.setValue(availableFilesView.getSelectionModel().getSelectedItem() == null);
             }
 
-            // If the key pressed was UP, DOWN, or BACKSPACE, update the displayed image
+            // If the key is UP, DOWN, or BACKSPACE, update the display
             if (e.getCode() == KeyCode.UP || e.getCode() == KeyCode.DOWN | e.getCode() == KeyCode.BACK_SPACE) {
-                Platform.runLater(() -> displayInViewPort(this.availableFilesView.getSelectionModel().getSelectedItem()));
-            }
 
-            //  Whatever key was selected, update the "nothing selected" boolean
-            this.nothingIsSelected.setValue(this.availableFilesView.getSelectionModel().getSelectedItems().isEmpty());
+                Platform.runLater(() -> {
+                    displayInViewPort(availableFilesView.getSelectionModel().getSelectedItem());
+                });
+            }
 
         });
 
-        // Add all sub-widgets to the main widget
-        this.getChildren().add(this.availableFilesView);
-        this.getChildren().add(this.iv);
+        // Add all widgets to the main layout
+        this.getChildren().add(availableFilesView);
+        this.getChildren().add(iv);
+        this.setMaxHeight(height);
     }
 
     /**
-     * Method to register a change listener for "no selection" changes.
+     * Method to register a change listener for "is empty" changes.
      *
      * @param listener The listener method
      */
-    public void addNoSelectionListener(Consumer<Boolean> listener) {
-        // Pass to the SimpleBooleanProperty a (more fancy)
+    public void addEmptinessListener(Consumer<Boolean> listener) {
+        // Simply pass to the SimpleBooleanProperty a (more fancy)
         // listener that calls the (less fancy) user-provided listener
-        this.nothingIsSelected.addListener((observable, oldValue, newValue) ->
-        {
+        this.isEmpty.addListener((observable, oldValue, newValue) -> {
             listener.accept(newValue);
         });
     }
@@ -157,13 +145,11 @@ class FileListWithViewPort extends HBox {
      * Method to clear all files from the list
      */
     public void clear() {
-        // Must be done in the JavaFX application thread, and this method
-        // may be called from any thread, so let's handle two cases (we don't
-        // want the JavaFX Application thread to call runLater)
+
         if (! Platform.isFxApplicationThread()) {
             Platform.runLater(this::clearFileList);
         } else {
-           this.clearFileList();
+            this.clearFileList();
         }
     }
 
@@ -172,12 +158,12 @@ class FileListWithViewPort extends HBox {
      */
     private void clearFileList() {
         this.availableFiles.clear();
-        this.nothingIsSelected.setValue(true);
+        this.isEmpty.setValue(availableFiles.isEmpty());
         this.displayInViewPort((Path) null);
     }
 
     /**
-     * Method that returns the number of files in the ListView
+     * Method that returns the number of files
      *
      * @return the number of files
      */
@@ -186,18 +172,17 @@ class FileListWithViewPort extends HBox {
     }
 
     /**
-     * Method to add file paths to the ListView
+     * Method to add files to the list
      *
-     * @param toAdd List of Path objects
+     * @param toAdd List of File objects
      */
     public void addFiles(List<Path> toAdd) {
 
-        // If null is passed in, do nothing
         if (toAdd == null) return;
 
-        // Add the file paths to the file list
+        // Add  the files to the file list
         for (Path f : toAdd) {
-            // Determine if this is a new file path
+            // Check that the file is indeed new
             boolean add = true;
             for (Path g : availableFiles) {
                 if (f.equals(g)) {
@@ -205,36 +190,46 @@ class FileListWithViewPort extends HBox {
                     break;
                 }
             }
-            // If was a new path, then add it.
             if (add) {
-                this.availableFiles.add(f);
+                availableFiles.add(f);
             }
         }
 
-        Platform.runLater(()-> this.nothingIsSelected.setValue(this.availableFilesView.getSelectionModel().getSelectedItems().isEmpty()));
+        // Update the display accordingly
+        Platform.runLater(() -> {
+            this.isEmpty.setValue(availableFiles.isEmpty());
+
+        });
     }
 
     /**
-     * Retrieve the list of file paths selected by the user
+     * Method to add one file to the list
      *
-     * @return The list of selected file paths
+     * @param file : the file to add
+     */
+    public void addFile(Path file) {
+        List<Path> toAdd = new ArrayList<>();
+        toAdd.add(file);
+        this.addFiles(toAdd);
+    }
+
+    /**
+     * Retrieve the list of files selected by the user
+     *
+     * @return The list of selected files
      */
     public List<Path> getSelection() {
         return this.availableFilesView.getSelectionModel().getSelectedItems();
     }
 
     /**
-     * Helper method to display and image file in the viewport.
+     * Helper method to display and image file in the viewport
      *
-     * @param file The image file to display in the viewport. If null is passed, then
-     *             the empty image will be displayed. If an invalid path is passed, then
-     *             the broken image will be displayed.
+     * @param file The image file to display in the viewport
      */
     private void displayInViewPort(Path file) {
 
-        // Initialize the image display to the broken image in case the path is invalid
         Image img = brokenImage;
-
         if (file != null) {
             try {
                 img = new Image(file.toUri().toURL().toString());
@@ -245,8 +240,8 @@ class FileListWithViewPort extends HBox {
             }
         } else {
             img = emptyImage;
+
         }
-        // Display the image obtained from the file (or the empay
         displayInViewPort(img);
     }
 
@@ -257,7 +252,7 @@ class FileListWithViewPort extends HBox {
      */
     private void displayInViewPort(Image img) {
 
-        // Display the image in the ImageView
+        this.iv.setImage(null);
         this.iv.setImage(img);
 
         // Max out the width
