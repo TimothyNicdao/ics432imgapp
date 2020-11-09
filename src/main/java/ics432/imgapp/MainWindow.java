@@ -27,7 +27,6 @@ class MainWindow {
     private final Stage primaryStage;
     private final Button quitButton;
     private final Button showStatsButton;
-    private CheckBox mtcb = new CheckBox();
     private Slider imageSlider = new Slider();
     private int pendingJobCount = 0;
     private volatile int jobsExecuted = 0;
@@ -42,8 +41,9 @@ class MainWindow {
     private int jobID = 0;
     private Double updatedValue;
     public StatisticsWindow sw;
-    public boolean mtcbSelected = false;
+    public boolean mtcbSelected = true;
     public Double sliderValue = 2.0;
+    public Job mainJob; 
 
     /**
      * Constructor
@@ -72,9 +72,6 @@ class MainWindow {
         imageSlider.setMinorTickCount(0);
         imageSlider.setBlockIncrement(2.0);
         imageSlider.setSnapToTicks(true);
-
-        mtcb.setText("Multithreading");
-        mtcb.setSelected(false);
 
         Button addFilesButton = new Button("Add Image Files");
         addFilesButton.setPrefHeight(buttonPreferredHeight);
@@ -130,12 +127,6 @@ class MainWindow {
             this.jobID += 1;
             this.sliderValue = this.imageSlider.getValue();
 
-            if (mtcb.isSelected()) {
-                mtcbSelected = true;
-            } else {
-                mtcbSelected = false;
-            }
-
             JobWindow jw = new JobWindow(
                 (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
                 this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
@@ -177,6 +168,11 @@ class MainWindow {
 
         //  Show it on  screen.
         this.primaryStage.show();
+
+
+        // Create a main job that will handle jobs from all job windows.
+
+        Job mainjob = new Job(imgTransform, this.targetDir, this.inputFiles);
     }
 
 
