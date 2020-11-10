@@ -44,6 +44,7 @@ class MainWindow {
     public boolean mtcbSelected = true;
     public Double sliderValue = 2.0;
     public Job mainJob; 
+    public ArrayList<WorkUnit> todo; 
 
     /**
      * Constructor
@@ -147,7 +148,6 @@ class MainWindow {
 
         HBox row1 = new HBox(5);
         row1.getChildren().add(addFilesButton);
-        row1.getChildren().add(mtcb);
         row1.getChildren().add(imageSlider);
         layout.getChildren().add(row1);
 
@@ -170,9 +170,16 @@ class MainWindow {
         this.primaryStage.show();
 
 
+
+
+        // holds the work to be processed
+        this.todo = new ArrayList<WorkUnit>();
+
         // Create a main job that will handle jobs from all job windows.
 
-        Job mainjob = new Job(imgTransform, this.targetDir, this.inputFiles);
+        Job mainjob = new Job(this);
+        // starts up a job which starts all needed threads and monitors the maindow for work. 
+        mainjob.execute();
     }
 
 
@@ -311,4 +318,14 @@ class MainWindow {
         this.computeSpeedSolarize = this.updatedValue/this.computeSpeedSolarizeArr.size();
      }
 
+
+    /**
+     * 
+     * Method to add work for processing. 
+     * 
+     */
+    public synchronized void addWork(WorkUnit work) {
+        this.todo.add(work);
+        this.todo.notifyAll();
+    }
 }

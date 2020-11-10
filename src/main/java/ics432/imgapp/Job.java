@@ -60,11 +60,10 @@ class Job {
      * @param targetDir    The target directory in which to generate output images
      * @param inputFiles   The list of input file paths
      */
-    Job(ImgTransform imgTransform, Path targetDir, MainWindow mw) {
+    Job(MainWindow mw) {
 
         this.imgTransform = imgTransform;
         this.targetDir = targetDir;
-        this.inputFiles = inputFiles;
         this.outcome = new ArrayList<>();
         this.inputBuffer = new ArrayBlockingQueue<Image>(16);
         this.inputFileBuffer = new ArrayBlockingQueue<Path>(16);
@@ -77,7 +76,6 @@ class Job {
      */
     void execute(JobWindow window, MainWindow mw) {
 
-        this.mw = mw;
         if (mw.mtcbSelected == true) {
             Runnable readRun = () -> {
                 readFunction(this.inputFiles);
