@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*; //hw8
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -416,8 +417,28 @@ class JobWindow extends Stage {
         // Create a job
         Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
 
-        // Execute it
-        job.execute(this, this.mw);
+      Runnable readRun = () -> {                      //hw8
+        job.readFunction(this.inputFiles);
+      };
+      Thread readThread = new Thread(readRun);        //hw8
+      readThread.setDaemon(true);                     //hw8
+
+      Runnable processRun = () -> {                   //hw8
+        job.processFunction();
+      };
+      Thread processThread = new Thread(processRun);  //hw8
+      processThread.setDaemon(true);
+
+      Runnable writeRun = () -> {                     //hw8
+        job.writeFunction(this, this.mw);
+      };
+
+      Thread writeThread = new Thread(writeRun);      //hw8
+      writeThread.setDaemon(true);                    //hw8
+
+      this.mw.pool1.execute(readThread);              //hw8
+      this.mw.pool2.execute(processThread);           //hw8
+      this.mw.pool3.execute(writeThread);             //hw8
 
         // close the window
 

@@ -18,7 +18,7 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.*;
 import java.util.function.IntToDoubleFunction;
 
 import static javax.imageio.ImageIO.createImageOutputStream;
@@ -79,28 +79,13 @@ class Job {
 
         this.mw = mw;
 
-            Runnable readRun = () -> {
-                readFunction(this.inputFiles);
-            };
-            Thread readThread = new Thread(readRun);
-
-            Runnable processRun = () -> {
-                processFunction();
-            };
-            Thread processThread = new Thread(processRun);
-
-            Runnable writeRun = () -> {
-                writeFunction(window);
-            };
-            Thread writeThread = new Thread(writeRun);
-
-            readThread.start();
-            processThread.start();
-            writeThread.start();
+            //readThread.start();
+            //processThread.start();
+            //writeThread.start();
 
     }
 
-    private void readFunction(List<Path> inputFiles) {
+    void readFunction(List<Path> inputFiles) {
         this.totalStartTime = System.nanoTime();
         for (Path inputFile : inputFiles) {
 
@@ -135,10 +120,10 @@ class Job {
             }
         }
 
-      System.err.println("readFunction done");
+      System.err.println(Thread.currentThread().getName());           //hw8
     }
 
-    private void processFunction() {
+    void processFunction() {                                          //hw8
         while (this.imagesProcessed != this.inputFiles.size()) {
 
             Image image = null;
@@ -165,10 +150,11 @@ class Job {
             img = null;
         }
 
-        System.err.println("processFunction done");
+      System.err.println(Thread.currentThread().getName());  //hw8
     }
 
-    private void writeFunction(JobWindow window) {
+    void writeFunction(JobWindow window, MainWindow mw) {     //hw8
+      this.mw = mw;
         while (this.imagesDone != this.inputFiles.size()) {
 
             // Write the image back to a file
@@ -221,7 +207,8 @@ class Job {
         updateFilter();
         Platform.runLater(() -> window.updateTimes(this));
         Platform.runLater(() -> window.jobCompleted());
-        System.err.println("writeFunction done");
+
+      System.err.println(Thread.currentThread().getName()); //hw8
     }
 
     /**

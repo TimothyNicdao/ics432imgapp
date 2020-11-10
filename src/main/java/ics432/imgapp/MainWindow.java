@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*; //hw8
 
 /**
  * A class that implements the "Main Window" for the app, which
@@ -38,6 +39,9 @@ class MainWindow {
     private int jobID = 0;
     private Double updatedValue;
     public StatisticsWindow sw;
+    public ExecutorService pool1; //hw8
+    public ExecutorService pool2; //hw8
+    public ExecutorService pool3; //hw8
 
     /**
      * Constructor
@@ -45,6 +49,10 @@ class MainWindow {
      * @param primaryStage The primary stage
      */
     MainWindow(Stage primaryStage, int windowWidth, int windowHeight) {
+
+        this.pool1 = Executors.newFixedThreadPool(1);//hw8
+        this.pool2 = Executors.newFixedThreadPool(1);//hw8
+        this.pool3 = Executors.newFixedThreadPool(1);//hw8
 
         double buttonPreferredHeight = 27.0;
 
@@ -102,6 +110,9 @@ class MainWindow {
         quitButton.setOnAction(e -> {
             // If the button is enabled, it's fine to quit
             this.primaryStage.close();
+            this.pool1.shutdown(); //hw8
+            this.pool2.shutdown(); //hw8
+            this.pool3.shutdown(); //hw8
 
         });
 
