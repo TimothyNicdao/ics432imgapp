@@ -26,15 +26,19 @@ public class WorkUnit {
     public Path outputFile;
     public Image inputImage;
     public BufferedImage processedImage;
+    public Job givenJob;
+    public boolean end;
 
 
-    public WorkUnit(ImgTransform imgTransform, Path inputFile, Path targetDir) {
+    public WorkUnit(ImgTransform imgTransform, Path inputFile, Path targetDir, Job givenJob, boolean end) {
         this.imgTransform = imgTransform;
         this.inputFile = inputFile;
         this.targetDir = targetDir;
         this.outputFile = null;
         this.inputImage = null;
         this.processedImage = null;
+        this.givenJob = givenJob;
+        this.end = end;
     }
 
     public void readInputFile() throws IOException {

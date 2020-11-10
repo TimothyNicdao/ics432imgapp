@@ -11,15 +11,12 @@ public abstract class Job {
     List<Path> inputFiles;
     ImgTransform imgTransform;
     protected JobWindow jobWindow;
+    protected MainWindow mw;
 
     protected List<ImgTransformOutcome> outcomes;
     protected Profiling profiling;
 
     protected volatile boolean isCanceled;
-
-    protected ArrayBlockingQueue<WorkUnit> toRead;
-    protected ArrayBlockingQueue<WorkUnit> toProcess;
-    protected ArrayBlockingQueue<WorkUnit> toWrite;
 
     /**
      * Constructor
@@ -32,30 +29,27 @@ public abstract class Job {
         List<Path>  inputFiles,
         ImgTransform imgTransform,
         int bufferSize,
-        JobWindow jobWindow) {
+        JobWindow jobWindow, MainWindow mw) {
 
         this.targetDir = targetDir;
         this.inputFiles  = inputFiles;
         this.imgTransform  = imgTransform;
         this.jobWindow = jobWindow;
+        this.mw = mw;
 
         this.outcomes = new ArrayList<>();
         this.profiling = new Profiling();
         this.isCanceled = false;
 
-        // Create ProdCons buffers
-        this.toRead = new ArrayBlockingQueue(inputFiles.size() + 1);
-        this.toProcess  = new ArrayBlockingQueue(bufferSize  + 1);
-        this.toWrite  = new ArrayBlockingQueue(bufferSize + 1);
-
         // Populate the toRead buffer
         try {
             for (Path inputFile : this.inputFiles) {
-                WorkUnit wu = new WorkUnit(this.imgTransform, inputFile, this.targetDir);
-                toRead.put(wu);
+                WorkUnit wu = new WorkUnit(this.imgTransform, inputFile, this.targetDir, this, false);
+                this.mw.toRead.put(wu);
             }
+            WorkUnit jobEnd = new WorkUnit(this.imgTransform, this.inputFiles.get(0), this.targetDir, this, true);
+            this.mw.toRead.put(jobEnd);
             // Put a the "the end" work unit to signal the end of computing
-            toRead.put(ProdConsBuffer.theEnd);
         } catch (InterruptedException ignore) {
         }
 

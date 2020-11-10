@@ -42,6 +42,8 @@ class JobWindow extends Stage {
     private final Button closeButton;
     private final ComboBox<ImgTransform> imgTransformList;
     private JobThread runningJob = null;
+    private MainWindow mw;
+    protected boolean jobDone = false;
 
     private ProgressArea progressArea;
 
@@ -55,7 +57,7 @@ class JobWindow extends Stage {
      * @param inputFiles The batch of input image files
      * @param maxNumImagedInRAM Bound on number of images in RAM
      */
-    JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles, boolean multithreading, int maxNumImagedInRAM) {
+    JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles, boolean multithreading, int maxNumImagedInRAM, MainWindow mw) {
 
         double buttonPreferredHeight = 27.0;
 
@@ -64,6 +66,7 @@ class JobWindow extends Stage {
         this.inputFiles = inputFiles;
         this.multithreading = multithreading;
         this.maxNumImagedInRAM = maxNumImagedInRAM;
+        this.mw = mw;
 
         // Set up the window
         this.setX(X);
@@ -219,7 +222,7 @@ class JobWindow extends Stage {
                 this.inputFiles,
                 this.imgTransformList.getSelectionModel().getSelectedItem(),
                 this.maxNumImagedInRAM,
-                this);
+                this, this.mw);
 
         // TODO: Launch it in a Cancellable Thread
         this.runningJob = new JobThread(job);

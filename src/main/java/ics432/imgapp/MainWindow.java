@@ -13,11 +13,15 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.io.File;
+import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import ics432.imgapp.Job.ImgTransformOutcome;
 
 /**
  * A class that implements the "Main Window" for the app, which
@@ -34,9 +38,12 @@ class MainWindow {
     private int jobID = 0;
     private CheckBox multithreadingCheckBox = null;
     private Slider memorySlider;
-
-
-
+    protected ArrayBlockingQueue<WorkUnit> toRead;
+    protected ArrayBlockingQueue<WorkUnit> toProcess;
+    protected ArrayBlockingQueue<WorkUnit> toWrite;
+    private ReaderThread readerThread;
+    private ProcessorThread processorThread;
+    private WriterThread writerThread;
 
     /**
      * Constructor
@@ -53,6 +60,24 @@ class MainWindow {
 
         // Make this primaryStage non closable
         this.primaryStage.setOnCloseRequest(Event::consume);
+
+        // Create ProdCons buffers
+        this.toRead = new ArrayBlockingQueue(50);
+        this.toProcess  = new ArrayBlockingQueue(16);
+        this.toWrite  = new ArrayBlockingQueue(16);
+
+        // Create and start all threads
+        this.readerThread = new ReaderThread(this);
+        this.processorThread = new ProcessorThread(this);
+        this.writerThread = new WriterThread(this);
+
+        this.readerThread.setDaemon(true);
+        this.readerThread.start();
+        this.processorThread.setDaemon(true);
+        this.processorThread.start();
+        this.writerThread.setDaemon(true);
+        this.writerThread.start();
+        
 
         // Create all widgets
         Button addFilesButton = new Button("Add Image Files");
@@ -128,7 +153,7 @@ class MainWindow {
                     this.jobID,
                     new  ArrayList<>(this.fileListWithViewPort.getSelection()),
                     this.multithreadingCheckBox.isSelected(),
-                    16);
+                    16,this);
 
             jw.addCloseListener(() -> {
                 this.pendingJobCount -= 1;
@@ -201,4 +226,176 @@ class MainWindow {
         }
     }
 
+    
+    /**
+     * Nested ReaderThread class
+     */
+    private class ReaderThread extends Thread {
+
+        private MainWindow mw;
+
+        public ReaderThread(MainWindow mw) {
+            this.mw = mw;
+        }
+
+        @Override
+        public void run() {
+
+            while (true) {
+
+
+                WorkUnit wu;
+
+                try {
+                    wu = this.mw.toRead.take();
+                } catch (InterruptedException e) {
+                    //  We're canceled
+                    break;
+                }
+
+                if (wu.end == true) {
+                    try {
+                        this.mw.toProcess.put(wu);
+                    } catch (InterruptedException e) {
+                        //  We're canceled
+                        break;
+                    }
+
+                } else {
+                    try {
+                        long t1 = System.currentTimeMillis();
+                        wu.readInputFile();
+                        long t2 = System.currentTimeMillis();
+                        wu.givenJob.profiling.readTime += (t2 - t1) / 1000F;
+                    } catch (IOException e) {
+                        wu.givenJob.outcomes.add(wu.givenJob.new ImgTransformOutcome(false, wu.inputFile, null, e));
+                        continue;
+                    }
+
+                try {
+                    this.mw.toProcess.put(wu);
+                } catch (InterruptedException e) {
+                    // We're canceled
+                    break;
+                }
+                }
+                    
+            }
+        }
+    }
+
+
+
+    /**
+     * Nested ProcessorThread class
+     */
+    private class ProcessorThread extends Thread {
+
+        private MainWindow mw;
+
+        public ProcessorThread(MainWindow mw) {
+            this.mw = mw;
+        }
+
+        @Override
+        public void run() {
+
+            while (true) {
+
+                WorkUnit wu;
+                try {
+                    wu = this.mw.toProcess.take();
+                } catch (InterruptedException e) {
+                    //  We're canceled
+                    break;
+                }
+
+                if (wu.end == true) {
+                    try {
+                        this.mw.toWrite.put(wu);
+                    } catch (InterruptedException e) {
+                        //  We're canceled
+                        break;
+                    }
+
+                } else {
+                    long t1 = System.currentTimeMillis();
+                    wu.processImage();
+                    long t2 = System.currentTimeMillis();
+                    wu.givenJob.profiling.processingTime += (t2 - t1) / 1000F;
+
+                    try {
+                        this.mw.toWrite.put(wu);
+                    } catch (InterruptedException e) {
+                        // We're canceled
+                        break;
+                    }
+                }
+                    
+            }
+        }
+    }
+
+
+    /**
+     * Nested WriterThread class
+     */
+    private class WriterThread extends Thread {
+
+        private MainWindow mw;
+
+        public WriterThread(MainWindow mw) {
+            this.mw = mw;
+        }
+
+        @Override
+        public void run() {
+
+            int count = 0;
+            while (true) {
+
+                WorkUnit wu;
+                try {
+                    wu = this.mw.toWrite.take();
+                } catch (InterruptedException e) {
+                    //  We're canceled
+                    break;
+                }
+
+                ImgTransformOutcome outcome = null;
+
+                if (wu.end == true) {
+                    wu.givenJob.jobWindow.jobDone = true;
+                } else {
+                    try {
+                    long t1 = System.currentTimeMillis();
+                    wu.writeImage();
+                    long t2 = System.currentTimeMillis();
+                    wu.givenJob.profiling.writeTime += (t2 - t1) / 1000F;
+                    outcome = wu.givenJob.new ImgTransformOutcome(true, wu.inputFile, wu.outputFile, null);
+                    } catch (IOException e) {
+                        outcome = wu.givenJob.new ImgTransformOutcome(false, wu.inputFile, null, e);
+                    }
+
+                    wu.givenJob.outcomes.add(outcome);
+
+                    if (wu.givenJob.jobWindow != null) {
+                        double progress = 1.0 * (++count) / wu.givenJob.inputFiles.size();
+                        wu.givenJob.jobWindow.updateProgress(progress);
+                    }
+
+                    if (outcome.success) {
+                        ICS432ImgApp.statistics.newlyProcessedImage(wu.givenJob.imgTransform);
+                    }
+
+                    if (wu.givenJob.jobWindow != null) {
+                        if (outcome.success) {
+                            wu.givenJob.jobWindow.updateDisplayAfterImgProcessed(outcome.outputFile);
+                        }
+                    }
+                }
+                
+            }
+        }
+    }
 }
