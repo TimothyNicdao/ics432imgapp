@@ -18,6 +18,8 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.function.IntToDoubleFunction;
 
 import static javax.imageio.ImageIO.createImageOutputStream;
 
@@ -34,9 +36,9 @@ class Job {
     private final List<Path> inputFiles;
     private Double imageSizeTotal = 0.0;
     private Double computeSpeed = 0.0;
-    private ArrayDeque<Image> inputBuffer;
-    private ArrayDeque<Path> inputFileBuffer;
-    private ArrayDeque<BufferedImage> outputBuffer;
+    private final ArrayBlockingQueue<Image> inputBuffer;
+    private final ArrayDeque<Path> inputFileBuffer;
+    private final ArrayBlockingQueue<BufferedImage> outputBuffer;
     private int imagesDone = 0;
     private int imagesProcessed = 0;
 
@@ -65,9 +67,9 @@ class Job {
         this.targetDir = targetDir;
         this.inputFiles = inputFiles;
         this.outcome = new ArrayList<>();
-        this.inputBuffer = new ArrayDeque<Image>(inputFiles.size());
+        this.inputBuffer = new ArrayBlockingQueue<>(16);
         this.inputFileBuffer = new ArrayDeque<Path>(inputFiles.size());
-        this.outputBuffer = new ArrayDeque<BufferedImage>(inputFiles.size());
+        this.outputBuffer = new ArrayBlockingQueue<>(16);
     }
 
     /**
@@ -76,7 +78,7 @@ class Job {
     void execute(JobWindow window, MainWindow mw) {
 
         this.mw = mw;
-        if (mw.mtcbSelected == true) {
+
             Runnable readRun = () -> {
                 readFunction(this.inputFiles);
             };
@@ -96,63 +98,11 @@ class Job {
             processThread.start();
             writeThread.start();
 
-        } else {
-            // Go through each input file and process it
-            this.totalStartTime = System.nanoTime();
-            for (Path inputFile : inputFiles) {
-
-                if (!window.isCancelled()) {
-                    try {
-                    } catch (Exception e) {
-                        System.out.println(e);
-                    }
-
-                    System.err.println("Applying " + this.imgTransform.getName() + " to "
-                            + inputFile.toAbsolutePath().toString() + " ...");
-
-                    Path outputFile;
-                    try {
-                        outputFile = processInputFile(inputFile);
-                        // Generate a "success" outcome
-                        window.displayJob(new ImgTransformOutcome(true, inputFile, outputFile, null));
-                        this.mw.increaseImagesProcessed();
-                        if (this.mw.sw == null) {
-                        } else {
-                            this.mw.sw.windowUpdateImagesProcessed();
-                        }
-                        this.imageSizeTotal += Files.size(inputFile);
-                    } catch (IOException e) {
-                        // Generate a "failure" outcome
-                        window.displayJob(new ImgTransformOutcome(false, inputFile, null, e));
-                    }
-                } else {
-                    // cancelled if not success and no exception
-                    window.displayJob(new ImgTransformOutcome(false, inputFile, null, null));
-                }
-                window.updateTasksDone();
-            }
-            long totalEndTime = System.nanoTime();
-            this.totalTime = (double) (totalEndTime - totalStartTime);
-
-            updateFilter();
-            Platform.runLater(() -> window.updateTimes(this));
-            Platform.runLater(() -> window.jobCompleted());
-        }
     }
 
     private void readFunction(List<Path> inputFiles) {
         this.totalStartTime = System.nanoTime();
         for (Path inputFile : inputFiles) {
-
-            synchronized(this)
-            {
-                while (this.inputBuffer.size() == this.mw.sliderValue) {
-                    try {
-                        this.wait();
-                    } catch (InterruptedException e) {
-                    }
-                }
-            }   
 
             System.err.println("Applying " + this.imgTransform.getName() + " to "
                             + inputFile.toAbsolutePath().toString() + " ...");
@@ -163,11 +113,16 @@ class Job {
                 image = new Image(inputFile.toUri().toURL().toString());
                 long readEndTime = System.nanoTime();
                 this.readTime += readEndTime - readStartTime;
-                synchronized(this) {
-                    this.inputBuffer.addLast(image);
-                    this.inputFileBuffer.addLast(inputFile);
-                    notifyAll();
-                }
+                  try{
+                    this.inputBuffer.put(image);
+
+                    synchronized (this) {
+                      this.inputFileBuffer.addLast(inputFile);
+                    }
+
+                  } catch(InterruptedException e) {
+
+                  }
                 if (image.isError()) {
                     throw new IOException("Error while reading from " + inputFile.toAbsolutePath().toString() + " ("
                             + image.getException().toString() + ")");
@@ -178,67 +133,58 @@ class Job {
                 } catch (IOException e1) {
                 }
             }
-            image = null;
         }
+
+      System.err.println("readFunction done");
     }
 
     private void processFunction() {
         while (this.imagesProcessed != this.inputFiles.size()) {
-            synchronized(this) {
-                while (this.inputBuffer.peek() == null) {
-                try {
-                    this.wait();
-                } catch (InterruptedException e) {
-                }
-                }
-            }
 
-            synchronized(this)
-            {
-                while (this.outputBuffer.size() == this.mw.sliderValue) {
-                    try {
-                        this.wait();
-                    } catch (InterruptedException e) {
-                    }
-                }
-            }  
-            
-            Image image;
-            synchronized(this) {
-                image = this.inputBuffer.removeFirst();
-            }
+            Image image = null;
+              try{
+                image = this.inputBuffer.take();
+              } catch(InterruptedException e) {
+
+              }
+
             // Process the image
             long processStartTime = System.nanoTime();
             BufferedImage img = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(image, null), null);
-            image = null;
             long processEndTime = System.nanoTime();
             this.processTime += processEndTime - processStartTime;
-            synchronized(this) {
-                this.outputBuffer.addLast(img);
-                notifyAll();
+
+            try{
+
+              this.outputBuffer.put(img);
+
+            } catch(InterruptedException e) {
+
             }
+            this.imagesProcessed ++;
             img = null;
         }
+
+        System.err.println("processFunction done");
     }
 
-    private synchronized void writeFunction(JobWindow window) {
+    private void writeFunction(JobWindow window) {
         while (this.imagesDone != this.inputFiles.size()) {
-            synchronized(this) {
-                while (this.outputBuffer.peek() == null) {
-                try {
-                    this.wait();
-                } catch (InterruptedException e) {
-                }
-            }
-            }
+
             // Write the image back to a file
-            BufferedImage img;
-            Path inputFile;
-            synchronized(this) {
-                img = this.outputBuffer.removeFirst();
-                inputFile = this.inputFileBuffer.removeFirst();
-                notifyAll();
-            }
+            BufferedImage img = null;
+            Path inputFile = null;
+              try{
+                img = this.outputBuffer.take();
+
+                synchronized (this) {
+                  inputFile = this.inputFileBuffer.removeFirst();
+                }
+
+              } catch(InterruptedException e) {
+
+              }
+
             String outputPath = this.targetDir + System.getProperty("file.separator") + this.imgTransform.getName() + "_" + inputFile.getFileName();
             try {
                 long writeStartTime = System.nanoTime();
@@ -275,6 +221,7 @@ class Job {
         updateFilter();
         Platform.runLater(() -> window.updateTimes(this));
         Platform.runLater(() -> window.jobCompleted());
+        System.err.println("writeFunction done");
     }
 
     /**
@@ -288,11 +235,11 @@ class Job {
     }
 
     /**
-     * Update proper filter 
+     * Update proper filter
      *
      * @return The read time of the job
      */
-    public void updateFilter() { 
+    public void updateFilter() {
         this.imageSizeTotal = this.imageSizeTotal/100000;
         this.totalTime = this.totalTime/1000000000;
         this.computeSpeed = this.imageSizeTotal/this.totalTime;
@@ -316,8 +263,8 @@ class Job {
      *
      * @return The read time of the job
      */
-    public Double readValue() { 
-        return readTime; 
+    public Double readValue() {
+        return readTime;
     }
 
     /**
@@ -325,8 +272,8 @@ class Job {
      *
      * @return The process time of the job
      */
-    public Double processValue() { 
-        return processTime; 
+    public Double processValue() {
+        return processTime;
     }
 
     /**
@@ -334,8 +281,8 @@ class Job {
      *
      * @return The write time of the job
      */
-    public Double writeValue() { 
-        return writeTime; 
+    public Double writeValue() {
+        return writeTime;
     }
 
     public Double totalTime() {

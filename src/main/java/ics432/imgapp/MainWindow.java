@@ -8,8 +8,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Slider;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -27,8 +25,6 @@ class MainWindow {
     private final Stage primaryStage;
     private final Button quitButton;
     private final Button showStatsButton;
-    private CheckBox mtcb = new CheckBox();
-    private Slider imageSlider = new Slider();
     private int pendingJobCount = 0;
     private volatile int jobsExecuted = 0;
     private volatile int imagesProcessed = 0;
@@ -42,8 +38,6 @@ class MainWindow {
     private int jobID = 0;
     private Double updatedValue;
     public StatisticsWindow sw;
-    public boolean mtcbSelected = false;
-    public Double sliderValue = 2.0;
 
     /**
      * Constructor
@@ -63,26 +57,13 @@ class MainWindow {
 
         // Create all widgets
 
-        imageSlider.setPrefWidth(300.0);
-        imageSlider.setMax(40.0);
-        imageSlider.setMin(2.0);
-        imageSlider.setShowTickMarks(true);
-        imageSlider.setShowTickLabels(true);
-        imageSlider.setMajorTickUnit(2.0);
-        imageSlider.setMinorTickCount(0);
-        imageSlider.setBlockIncrement(2.0);
-        imageSlider.setSnapToTicks(true);
-
-        mtcb.setText("Multithreading");
-        mtcb.setSelected(false);
-
         Button addFilesButton = new Button("Add Image Files");
         addFilesButton.setPrefHeight(buttonPreferredHeight);
         addFilesButton.setId("addFilesButton"); // for TestFX
 
         showStatsButton = new Button("Show Statistics");
         addFilesButton.setPrefHeight(buttonPreferredHeight);
-        addFilesButton.setId("showStatsButton"); 
+        addFilesButton.setId("showStatsButton");
 
         Button createJobButton = new Button("Create Job");
         createJobButton.setPrefHeight(buttonPreferredHeight);
@@ -128,13 +109,6 @@ class MainWindow {
             this.quitButton.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
-            this.sliderValue = this.imageSlider.getValue();
-
-            if (mtcb.isSelected()) {
-                mtcbSelected = true;
-            } else {
-                mtcbSelected = false;
-            }
 
             JobWindow jw = new JobWindow(
                 (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
@@ -142,13 +116,13 @@ class MainWindow {
                 this.primaryStage.getY() + 50 + this.pendingJobCount * +10,
                 this.jobID, new  ArrayList<>(this.fileListWithViewPort.getSelection()), this);
                 jw.addCloseListener(() -> {
-                    
+
                     this.pendingJobCount -= 1;
                     if (this.pendingJobCount == 0) {
                         this.quitButton.setDisable(false);
                     }
                 });
-                
+
         });
 
         //Construct the layout
@@ -156,8 +130,6 @@ class MainWindow {
 
         HBox row1 = new HBox(5);
         row1.getChildren().add(addFilesButton);
-        row1.getChildren().add(mtcb);
-        row1.getChildren().add(imageSlider);
         layout.getChildren().add(row1);
 
         layout.getChildren().add(this.fileListWithViewPort);
@@ -237,8 +209,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public long getJobsExecuted() { 
-        return this.jobsExecuted; 
+    public long getJobsExecuted() {
+        return this.jobsExecuted;
     }
 
     /**
@@ -246,8 +218,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public long getImagesProcessed() { 
-        return this.imagesProcessed; 
+    public long getImagesProcessed() {
+        return this.imagesProcessed;
     }
 
     /**
@@ -255,8 +227,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public Double getComputeSpeedInvert() { 
-        return this.computeSpeedInvert; 
+    public Double getComputeSpeedInvert() {
+        return this.computeSpeedInvert;
     }
 
     /**
@@ -278,8 +250,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public Double getComputeSpeedOil() { 
-        return this.computeSpeedOil; 
+    public Double getComputeSpeedOil() {
+        return this.computeSpeedOil;
     }
 
     /**
@@ -299,8 +271,8 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public Double getComputeSpeedSolarize() { 
-        return this.computeSpeedSolarize; 
+    public Double getComputeSpeedSolarize() {
+        return this.computeSpeedSolarize;
     }
 
     /**

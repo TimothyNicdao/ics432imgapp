@@ -75,8 +75,8 @@ class JobWindow extends Stage {
      */
     JobWindow(int windowWidth, int windowHeight, double X, double Y, int id, List<Path> inputFiles, MainWindow mainWindow) {
         this.mw = mainWindow;
-        
-        // Keep track of wether the jobs were cancelled via the cancel button 
+
+        // Keep track of wether the jobs were cancelled via the cancel button
         lock.lock();
         try {
             this.shouldCancel = false;
@@ -85,7 +85,7 @@ class JobWindow extends Stage {
             System.out.println(batcherror);
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
 
         // The  preferred height of buttons
@@ -209,7 +209,7 @@ class JobWindow extends Stage {
             this.progressLabel.setVisible(true);
             this.progressBar.setVisible(true);
             this.progressBar.setProgress(0);
-          
+
             Runnable myJob = () -> {
                 executeJob(imgTransformList.getSelectionModel().getSelectedItem());
             };
@@ -221,11 +221,11 @@ class JobWindow extends Stage {
             };
             Thread thread2 = new Thread(progressTracker);
             thread2.start();
-            // this.closeButton.setDisable(false); will be implemented via a listener 
+            // this.closeButton.setDisable(false); will be implemented via a listener
         });
 
         this.closeButton.setOnAction(f -> this.close());
-        
+
         this.cancelButton.setOnAction(f -> this.cancel());
 
         // Build the scene
@@ -290,7 +290,7 @@ class JobWindow extends Stage {
 
     public synchronized void updateTasksDone() {
         this.tasksDone = this.tasksDone + 1;
-    } 
+    }
 
     private double getTasksDone() {
         return this.tasksDone;
@@ -314,7 +314,7 @@ class JobWindow extends Stage {
 
         lock.lock();
         try {
-            this.shouldCancel = true; 
+            this.shouldCancel = true;
             this.runButton.setDisable(true);
             this.workerTask.cancel(true);
             this.progressBar.progressProperty().unbind();
@@ -324,7 +324,7 @@ class JobWindow extends Stage {
             System.out.println(batcherror);
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -419,16 +419,16 @@ class JobWindow extends Stage {
         // Execute it
         job.execute(this, this.mw);
 
-        // close the window 
-        this.closeButton.setDisable(false);
+        // close the window
 
-        this.cancelButton.setDisable(true);
+        //this.closeButton.setDisable(false);
+        //this.cancelButton.setDisable(true);
     }
 
     /**
      * A listener that updates job window when a job finishes
      *
-     * @param jobOutcome The outcome of a job 
+     * @param jobOutcome The outcome of a job
      */
     public void displayJob(Job.ImgTransformOutcome imageOutcome){
 
