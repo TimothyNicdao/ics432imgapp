@@ -227,7 +227,7 @@ class JobWindow extends Stage {
         // TODO: Launch it in a Cancellable Thread
         this.runningJob = new JobThread(job);
         this.runningJob.start();
-
+        
     }
 
     /**

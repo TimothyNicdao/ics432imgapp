@@ -284,6 +284,12 @@ class MainWindow {
 
                 if (wu.end == true) {
                     try {
+                        try{
+                            wu.readInputFile();
+                        } catch (IOException e) {
+                            
+                        }
+                        
                         this.mw.toProcess.put(wu);
                     } catch (InterruptedException e) {
                         //  We're canceled
@@ -347,6 +353,7 @@ class MainWindow {
 
                 if (wu.end == true) {
                     try {
+                        wu.processImage();
                         this.mw.toWrite.put(wu);
                     } catch (InterruptedException e) {
                         //  We're canceled

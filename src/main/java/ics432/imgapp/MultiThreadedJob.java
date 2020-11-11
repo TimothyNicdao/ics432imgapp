@@ -40,6 +40,10 @@ public class MultiThreadedJob extends Job {
             } catch (InterruptedException e) {
             }
         }
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+        }
 
         this.profiling.totalExecutionTime = (System.currentTimeMillis() - start) / 1000F;
 
