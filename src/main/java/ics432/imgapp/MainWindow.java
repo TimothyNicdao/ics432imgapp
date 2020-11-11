@@ -129,6 +129,7 @@ class MainWindow {
 
         createJobButton.setOnAction(e -> {
             this.quitButton.setDisable(true);
+            this.processorSlider.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
             this.sliderValue = this.processorSlider.getValue();
@@ -143,6 +144,7 @@ class MainWindow {
                     this.pendingJobCount -= 1;
                     if (this.pendingJobCount == 0) {
                         this.quitButton.setDisable(false);
+                        this.processorSlider.setDisable(false);
                     }
                 });
                 
