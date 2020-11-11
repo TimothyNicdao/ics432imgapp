@@ -100,7 +100,7 @@ class Job {
         // set as infinite loop because this will be run as daemon thread in order to indefinitely process incoming work. 
         while(true) {
             System.out.println("Reading");
-            WorkUnit work
+            WorkUnit work;
             // wait for notification if there are no jobs to be done to avoid wasting cpu cycles. 
             synchronized(this.mw.todo)
             {
