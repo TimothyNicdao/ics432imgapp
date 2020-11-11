@@ -44,7 +44,6 @@ public class MultiThreadedJob extends Job {
         this.profiling.totalExecutionTime = (System.currentTimeMillis() - start) / 1000F;
 
         if (this.jobWindow != null) {
-            System.out.println("hello");
             this.jobWindow.updateDisplayAfterJobCompletion(
                     this.isCanceled,
                     this.outcomes,

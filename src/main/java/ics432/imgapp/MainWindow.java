@@ -169,12 +169,6 @@ class MainWindow {
                         this.procThreadAmount--;
                     }
                 }
-                System.out.print("slider value");
-                System.out.println(this.procThreadSlider.getValue());
-                System.out.print("thread amount");
-                System.out.println(this.procThreadAmount);
-                System.out.print("thread arrlist amount");
-                System.out.println(this.procThreadArrList.size());
             }
             
 
