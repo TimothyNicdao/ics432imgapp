@@ -37,13 +37,15 @@ class MainWindow {
     private StatisticsWindow statisticsWindow = null;
     private int jobID = 0;
     private CheckBox multithreadingCheckBox = null;
-    private Slider memorySlider;
+    private Slider procThreadSlider;
     protected ArrayBlockingQueue<WorkUnit> toRead;
     protected ArrayBlockingQueue<WorkUnit> toProcess;
     protected ArrayBlockingQueue<WorkUnit> toWrite;
     private ReaderThread readerThread;
     private ProcessorThread processorThread;
     private WriterThread writerThread;
+    private int procThreadAmount = 1;
+    private ArrayList<ProcessorThread> procThreadArrList;
 
     /**
      * Constructor
@@ -65,6 +67,8 @@ class MainWindow {
         this.toRead = new ArrayBlockingQueue(50);
         this.toProcess  = new ArrayBlockingQueue(16);
         this.toWrite  = new ArrayBlockingQueue(16);
+
+        this.procThreadArrList = new ArrayList();
 
         // Create and start all threads
         this.readerThread = new ReaderThread(this);
@@ -91,13 +95,14 @@ class MainWindow {
         multithreadingCheckBox = new CheckBox("Multithreading");
         multithreadingCheckBox.setSelected(true);
 
-        this.memorySlider = new Slider(2, 40, 2);
-        this.memorySlider.setPrefWidth(350);
-        this.memorySlider.setBlockIncrement(2);
-        this.memorySlider.setMajorTickUnit(2);
-        this.memorySlider.setMinorTickCount(0);
-        this.memorySlider.setShowTickLabels(true);
-        this.memorySlider.setSnapToTicks(true);
+
+        this.procThreadSlider = new Slider(1, Runtime.getRuntime().availableProcessors(), 1);
+        this.procThreadSlider.setPrefWidth(350);
+        this.procThreadSlider.setBlockIncrement(1);
+        this.procThreadSlider.setMajorTickUnit(1);
+        this.procThreadSlider.setMinorTickCount(0);
+        this.procThreadSlider.setShowTickLabels(true);
+        this.procThreadSlider.setSnapToTicks(true);
 
         Button createJobButton = new Button("Create Job");
         createJobButton.setPrefHeight(buttonPreferredHeight);
@@ -144,8 +149,35 @@ class MainWindow {
 
         createJobButton.setOnAction(e -> {
             this.quitButton.setDisable(true);
+            this.procThreadSlider.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
+            if (this.procThreadAmount != this.procThreadSlider.getValue()) {
+                if (this.procThreadAmount < this.procThreadSlider.getValue()) {
+                    while (this.procThreadAmount != this.procThreadSlider.getValue()) {
+                        ProcessorThread newThread = new ProcessorThread(this);
+                        this.procThreadArrList.add(newThread);
+                        newThread.setDaemon(true);
+                        newThread.start();
+                        this.procThreadAmount++;
+                    }
+                } else {
+                    while (this.procThreadAmount != this.procThreadSlider.getValue()) {
+                        ProcessorThread temp = this.procThreadArrList.get(this.procThreadAmount -2);
+                        temp.stopThread();
+                        this.procThreadArrList.remove(this.procThreadAmount -2);
+                        this.procThreadAmount--;
+                    }
+                }
+                System.out.print("slider value");
+                System.out.println(this.procThreadSlider.getValue());
+                System.out.print("thread amount");
+                System.out.println(this.procThreadAmount);
+                System.out.print("thread arrlist amount");
+                System.out.println(this.procThreadArrList.size());
+            }
+            
+
             JobWindow jw = new JobWindow(
                     (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
                     this.primaryStage.getX() + 100 + this.pendingJobCount * 10,
@@ -159,6 +191,7 @@ class MainWindow {
                 this.pendingJobCount -= 1;
                 if (pendingJobCount == 0) {
                     this.quitButton.setDisable(false);
+                    this.procThreadSlider.setDisable(false);
                 }
             });
         });
@@ -172,6 +205,8 @@ class MainWindow {
 
         toprow.getChildren().add(addFilesButton);
         toprow.getChildren().add(viewStatsButton);
+        toprow.getChildren().add(new Label("#Processor Threads"));
+        toprow.getChildren().add(procThreadSlider);
         layout.getChildren().add(toprow);
 
         layout.getChildren().add(this.fileListWithViewPort);
@@ -292,15 +327,21 @@ class MainWindow {
     private class ProcessorThread extends Thread {
 
         private MainWindow mw;
+        private volatile boolean runThread = true;
 
         public ProcessorThread(MainWindow mw) {
             this.mw = mw;
         }
 
+        public void stopThread() {
+            runThread = false;
+            interrupt();
+        }
+
         @Override
         public void run() {
 
-            while (true) {
+            while (runThread) {
 
                 WorkUnit wu;
                 try {

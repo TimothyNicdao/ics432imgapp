@@ -2,6 +2,9 @@ package ics432.imgapp;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
+import com.jhlabs.image.InvertFilter;
+import com.jhlabs.image.OilFilter;
+import com.jhlabs.image.SolarizeFilter;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
@@ -57,7 +60,19 @@ public class WorkUnit {
 
     public void processImage() {
         if (this.inputImage != null) {
-            this.processedImage = imgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(this.inputImage, null), null);
+            int index = ICS432ImgApp.filters.indexOf(this.imgTransform);
+            ImgTransform newImgTransform;
+            if (index == 0 ) {
+                newImgTransform = new ImgTransform("Invert", new InvertFilter());
+            } else if (index == 1) {
+                newImgTransform = new ImgTransform("Solarize", new SolarizeFilter());
+            } else {
+                OilFilter of = new OilFilter();
+                of.setRange(4);
+                newImgTransform = new ImgTransform("Oil4", of);
+            }
+
+            this.processedImage = newImgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(this.inputImage, null), null);
             this.inputImage = null; // freeing  memory
         }
     }
