@@ -366,7 +366,7 @@ class Job {
             if(this.mw.sw == null){}
             else { this.mw.sw.windowUpdateInvert();}
         } else if (work.imgTransform.getName() == "Oil4") {
-            this.mw.updateOil(this.work);
+            this.mw.updateOil(work);
             if(this.mw.sw == null){}
             else { this.mw.sw.windowUpdateOil();}
         } else if (work.imgTransform.getName() == "Solarize") {
