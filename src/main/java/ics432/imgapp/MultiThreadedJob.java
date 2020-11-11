@@ -36,7 +36,7 @@ public class MultiThreadedJob extends Job {
 
         while(this.jobWindow.jobDone != true) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
             }
         }
