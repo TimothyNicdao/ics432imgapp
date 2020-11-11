@@ -33,8 +33,6 @@ import static javax.imageio.ImageIO.createImageOutputStream;
  */
 class Job {
 
-    private Double imageSizeTotal = 0.0;
-    private Double computeSpeed = 0.0;
     private ArrayBlockingQueue<WorkUnit> inputBuffer;
     private ArrayBlockingQueue<WorkUnit> outputBuffer;
     private int imagesDone = 0;
@@ -235,7 +233,7 @@ class Job {
 
             if (!work.poisoned && !work.jw.isCancelled()){
                 // Write the image back to a file
-                System.out.println("Writing!!");
+                System.out.println("Writing");
                 String outputPath = work.targetDir + System.getProperty("file.separator") + work.imgTransform.getName() + "_" + work.inputFile.getFileName();
                 try {
                     long writeStartTime = System.nanoTime();
@@ -258,7 +256,7 @@ class Job {
                                 this.mw.sw.windowUpdateImagesProcessed();
                             }
                             try {
-                                this.imageSizeTotal += Files.size(work.inputFile);
+                                work.imageSize = Files.size(work.inputFile);
                             } catch (IOException e) {
                                 work.jw.displayJob(new ImgTransformOutcome(false, work.inputFile, null, e));
                             }
@@ -363,19 +361,16 @@ class Job {
      * @return The read time of the job
      */
     public void updateFilter(WorkUnit work) { 
-        this.imageSizeTotal = this.imageSizeTotal/100000;
-        this.totalTime = this.totalTime/1000000000;
-        this.computeSpeed = this.imageSizeTotal/this.totalTime;
         if (work.imgTransform.getName() == "Invert") {
-            this.mw.updateInvert(this.computeSpeed);
+            this.mw.updateInvert(work);
             if(this.mw.sw == null){}
             else { this.mw.sw.windowUpdateInvert();}
         } else if (work.imgTransform.getName() == "Oil4") {
-            this.mw.updateOil(this.computeSpeed);
+            this.mw.updateOil(this.work);
             if(this.mw.sw == null){}
             else { this.mw.sw.windowUpdateOil();}
         } else if (work.imgTransform.getName() == "Solarize") {
-            this.mw.updateSolarize(this.computeSpeed);
+            this.mw.updateSolarize(work);
             if(this.mw.sw == null){}
             else { this.mw.sw.windowUpdateSolarize();}
         }

@@ -12,12 +12,14 @@ class WorkUnit{
     public double processTime = 0;
     public double writeTime = 0;
     public double totalTime = 0;
+    public double imageSize = 0;
     public Path   inputFile = null;
     public Image  image = null;
     public boolean poisoned = false; 
     public BufferedImage bufferedImage = null; 
     public ImgTransform imgTransform;
     public JobWindow jw;
+    
 
     WorkUnit(JobWindow jw, ImgTransform imgTransform, Path targetDir, Path inputFile){
         this.jw = jw; 

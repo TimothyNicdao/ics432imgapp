@@ -7,6 +7,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import sun.awt.X11.ToplevelStateListener;
 import javafx.stage.Stage;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
@@ -49,6 +50,15 @@ class MainWindow {
     public Double sliderValue = 1.0;
     public Job mainJob; 
     public ArrayList<WorkUnit> todo; 
+    public double computeSpeed = 0;
+    public double imageSizeInvert = 0;
+    public double imageSizeSolarize = 0;
+    public double imageSizeOil = 0;
+    public double invertTotalTime = 0;
+    public double solarizeTotalTime = 0;
+    public double oilTotalTime = 0;
+
+
     
     /**
      * Constructor
@@ -280,13 +290,10 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public void updateInvert(Double value) {
-       this.computeSpeedInvertArr.add(value);
-       this.updatedValue = 0.0;
-       for (int i = 0; i < this.computeSpeedInvertArr.size(); i++) {
-           this.updatedValue = this.updatedValue + this.computeSpeedInvertArr.get(i);
-       }
-       this.computeSpeedInvert = this.updatedValue/this.computeSpeedInvertArr.size();
+    public void updateInvert(WorkUnit work) {
+        this.imageSizeInvert += work.imageSize;
+        this.invertTotalTime += work.totalTime; 
+        this.computeSpeedInvert = this.imageSizeInvert/ this.invertTotalTime;
     }
 
     /**
@@ -303,11 +310,10 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public void updateOil(Double value) {
-        this.computeSpeedOilArr.add(value);
-        this.updatedValue = 0.0;
-        this.computeSpeedOilArr.forEach((item) -> this.updatedValue += item);
-        this.computeSpeedOil = this.updatedValue/this.computeSpeedOilArr.size();
+    public void updateOil(WorkUnit work) {
+        this.imageSizeOil += work.imageSize;
+        this.oilTotalTime += work.totalTime; 
+        this.computeSpeedOil = this.imageSizeInvert/ this.invertTotalTime;
      }
 
     /**
@@ -324,11 +330,10 @@ class MainWindow {
      *
      * @return The process time of the job
      */
-    public void updateSolarize(Double value) {
-        this.computeSpeedSolarizeArr.add(value);
-        this.updatedValue = 0.0;
-        this.computeSpeedSolarizeArr.forEach((item) -> this.updatedValue += item);
-        this.computeSpeedSolarize = this.updatedValue/this.computeSpeedSolarizeArr.size();
+    public void updateSolarize(WorkUnit work) {
+        this.imageSizeSolarize += work.imageSize;
+        this.solarizeTotalTime += work.totalTime; 
+        this.computeSpeedSolarize = this.imageSizeInvert/ this.invertTotalTime;
      }
 
 
