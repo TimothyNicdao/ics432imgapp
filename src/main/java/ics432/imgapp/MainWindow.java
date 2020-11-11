@@ -292,7 +292,7 @@ class MainWindow {
      */
     public void updateInvert(WorkUnit work) {
         this.imageSizeInvert += work.imageSize;
-        this.invertTotalTime += work.totalTime; 
+        this.invertTotalTime += work.getTotalTime(); 
         this.computeSpeedInvert = this.imageSizeInvert/ this.invertTotalTime;
     }
 
@@ -312,8 +312,8 @@ class MainWindow {
      */
     public void updateOil(WorkUnit work) {
         this.imageSizeOil += work.imageSize;
-        this.oilTotalTime += work.totalTime; 
-        this.computeSpeedOil = this.imageSizeInvert/ this.invertTotalTime;
+        this.oilTotalTime += work.getTotalTime(); 
+        this.computeSpeedOil = this.imageSizeOil/ this.oilTotalTime;
      }
 
     /**
@@ -332,8 +332,8 @@ class MainWindow {
      */
     public void updateSolarize(WorkUnit work) {
         this.imageSizeSolarize += work.imageSize;
-        this.solarizeTotalTime += work.totalTime; 
-        this.computeSpeedSolarize = this.imageSizeInvert/ this.invertTotalTime;
+        this.solarizeTotalTime += work.getTotalTime(); 
+        this.computeSpeedSolarize = this.imageSizeSolarize/ this.solarizeTotalTime;
      }
 
 
