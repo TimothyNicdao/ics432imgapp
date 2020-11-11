@@ -159,17 +159,17 @@ class Job {
     private void processFunction() {
         while (true) {
             System.out.println("Processing");
-            if (changeProcessorCount){
-                if (currentProcessorCount == 1){
-                    this.changeProcessorCount = false;
-                    this.createProcessorThreads();
+            // if (changeProcessorCount){
+            //     if (currentProcessorCount == 1){
+            //         this.changeProcessorCount = false;
+            //         this.createProcessorThreads();
 
-                    break;
-                }else{
-                    currentProcessorCount--;
-                    break;
-                }
-            }
+            //         break;
+            //     }else{
+            //         currentProcessorCount--;
+            //         break;
+            //     }
+            // }
 
             WorkUnit work; 
             synchronized(this) {
@@ -179,10 +179,10 @@ class Job {
                     } catch (InterruptedException e) {
                     }
                 }
-
                 work =  this.inputBuffer.poll();
             }
-
+            
+           
             if(!work.poisoned && !work.jw.isCancelled()){
                 // Process the image
                 long processStartTime = System.nanoTime();
