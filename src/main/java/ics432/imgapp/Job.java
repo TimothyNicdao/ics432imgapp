@@ -84,8 +84,10 @@ class Job {
             };
             Thread writeThread = new Thread(writeRun);
 
+            readThread.setDaemon(true);
             readThread.start();
             // processThread.start();
+            writeThread.setDaemon(true);
             writeThread.start();
 
     }
