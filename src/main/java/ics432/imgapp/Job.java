@@ -311,7 +311,7 @@ class Job {
         this.pool.shutdown();
         System.out.println("Creating " + (int) mw.processorSlider.getValue() + " threads" );
         this.pool = Executors.newFixedThreadPool( (int) mw.processorSlider.getValue());
-        for (int i = 0; i <= (int) mw.processorSlider.getValue(); i++){
+        for (int i = 0; i < (int) mw.processorSlider.getValue(); i++){
            Runnable processRun = () -> {
                processFunction();
            };
