@@ -333,7 +333,7 @@ class MainWindow {
     public void updateSolarize(WorkUnit work) {
         this.imageSizeSolarize += work.imageSize;
         this.solarizeTotalTime += work.getTotalTime(); 
-        this.computeSpeedSolarize = this.imageSizeSolarize/ this.solarizeTotalTime;
+        this.computeSpeedSolarize = this.imageSizeSolarize/this.solarizeTotalTime;
      }
 
 
