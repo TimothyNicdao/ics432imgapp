@@ -100,6 +100,7 @@ class Job {
         // set as infinite loop because this will be run as daemon thread in order to indefinitely process incoming work. 
         while(true) {
             System.out.println("Reading");
+            WorkUnit work
             // wait for notification if there are no jobs to be done to avoid wasting cpu cycles. 
             synchronized(this.mw.todo)
             {
@@ -109,10 +110,8 @@ class Job {
                     } catch (InterruptedException e) {
                     }
                 }
-                
+                work = this.mw.todo.remove(0);
             }   
-
-            WorkUnit work = this.mw.todo.remove(0);
 
             if(!work.poisoned && !work.jw.isCancelled()){
 
@@ -338,8 +337,12 @@ class Job {
             }
         });
 
-        pool.execute(processRun);
+        for (int i = 0; i < (int) mw.processorSlider.getValue(); i++){
+            pool.execute(processRun);
+        }
+    
     }
+
    
 
 
