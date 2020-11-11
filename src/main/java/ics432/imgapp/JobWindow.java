@@ -62,6 +62,10 @@ class JobWindow extends Stage {
     private boolean jobDone = false;
     private volatile int tasksDone = 0;
     private MainWindow mw;
+    private double readTime = 0; 
+    private double processTime = 0; 
+    private double writeTime = 0; 
+    private double totalTime = 0; 
 
     /**
      * Constructor
@@ -355,18 +359,22 @@ class JobWindow extends Stage {
      *
      * @param givenJob The job whose time is being calculated for
      */
-    public void updateTimes(Job givenJob) {
+    public void updateTimes(WorkUnit work) {
         if (this.shouldCancel == false) {
-          String readText = Double.toString(givenJob.readValue()/1000000000);
+          this.readTime += work.readTime;
+          String readText = Double.toString(this.readTime/1000000000);
           this.jobReadValue.setText(readText + "s");
 
-          String processText = Double.toString(givenJob.processValue()/1000000000);
+          this.processTime += this.processTime;
+          String processText = Double.toString(this.processTime/1000000000);
           this.jobProcessValue.setText(processText + "s");
 
-          String writeText = Double.toString(givenJob.readValue()/1000000000);
+          this.writeTime += work.writeTime; 
+          String writeText = Double.toString(this.writeTime/1000000000);
           this.jobWriteValue.setText(writeText + "s");
 
-          String totalText = Double.toString(givenJob.totalTime());
+          this.totalTime += work.totalTime;
+          String totalText = Double.toString(this.totalTime/1000000000);
           this.jobTotalValue.setText(totalText + "s");
 
           this.mw.increaseExecutedJobs();
@@ -413,16 +421,27 @@ class JobWindow extends Stage {
         // Clear the display
         this.flwvp.clear();
 
-        // Create a job
-        Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
+        for (Path inputFile : this.inputFiles){
+            WorkUnit work = new WorkUnit(this, imgTransform, this.targetDir, inputFile);
+            mw.addWork(work);
+        }
 
-        // Execute it
-        job.execute(this, this.mw);
+        // Add a poisoned work to signal that this job window should be completed. 
+        WorkUnit work = new WorkUnit(this, null, null, null);
+        work.poisoned = true;
+        mw.addWork(work);
+        
+
+        // // Create a job
+        // Job job = new Job(imgTransform, this.targetDir, this.inputFiles);
+
+        // // Execute it
+        // job.execute(this, this.mw);
 
         // close the window 
-        this.closeButton.setDisable(false);
+        // this.closeButton.setDisable(false);
 
-        this.cancelButton.setDisable(true);
+        // this.cancelButton.setDisable(true);
     }
 
     /**

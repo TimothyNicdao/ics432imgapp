@@ -324,8 +324,10 @@ class MainWindow {
      * Method to add work for processing. 
      * 
      */
-    public synchronized void addWork(WorkUnit work) {
-        this.todo.add(work);
-        this.todo.notifyAll();
+    public void addWork(WorkUnit work) {
+        synchronized(this.todo){ 
+            this.todo.add(work);
+            this.todo.notifyAll();
+        }
     }
 }
