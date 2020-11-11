@@ -16,10 +16,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService; 
 import java.util.concurrent.Executors; 
+import java.lang.Thread;
 
 import static javax.imageio.ImageIO.createImageOutputStream;
 
@@ -266,6 +268,10 @@ class Job {
                 updateFilter(work);
                 Platform.runLater(() -> work.jw.updateTimes(work));
             }else if (work.poisoned){
+                try {
+                    Thread.sleep(1500);
+                } catch (Exception e) {
+                }
                 Platform.runLater(() -> work.jw.jobCompleted());
             }else{
                 Platform.runLater(() -> work.jw.updateTimes(work));
@@ -312,14 +318,29 @@ class Job {
     public void createProcessorThreads() {
         this.pool.shutdown();
         System.out.println("Creating " + (int) mw.processorSlider.getValue() + " threads" );
-        this.pool = Executors.newFixedThreadPool( (int) mw.processorSlider.getValue());
-        for (int i = 0; i < (int) mw.processorSlider.getValue(); i++){
-           Runnable processRun = () -> {
-               processFunction();
-           };
-           this.pool.execute(processRun);
-        }
-   }
+        // this.pool = Executors.newFixedThreadPool( (int) mw.processorSlider.getValue());
+        // for (int i = 0; i < (int) mw.processorSlider.getValue(); i++){
+        //    Runnable processRun = () -> {
+        //        processFunction();
+        //    };
+        //    this.pool.execute(processRun);
+
+        Runnable processRun = () -> {
+                   processFunction();
+               };
+
+        pool = Executors.newFixedThreadPool((int) mw.processorSlider.getValue(),
+            new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                Thread t = Executors.defaultThreadFactory().newThread(r);
+                t.setDaemon(true);
+                return t;
+            }
+        });
+
+        pool.execute(processRun);
+    }
+   
 
 
 

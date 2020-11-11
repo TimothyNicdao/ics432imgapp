@@ -26,5 +26,8 @@ class WorkUnit{
         this.inputFile = inputFile; 
     }
 
+    public double getTotalTime() {
+        return readTime + processTime + writeTime;
+    }
 
 }

@@ -373,7 +373,7 @@ class JobWindow extends Stage {
           String writeText = Double.toString(this.writeTime/1000000000);
           this.jobWriteValue.setText(writeText + "s");
 
-          this.totalTime += work.totalTime;
+          this.totalTime += work.getTotalTime();
           String totalText = Double.toString(this.totalTime/1000000000);
           this.jobTotalValue.setText(totalText + "s");
 
