@@ -16,6 +16,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.beans.value.ObservableValue;
+import javafx.beans.value.ChangeListener;
+
+
 
 /**
  * A class that implements the "Main Window" for the app, which
@@ -27,7 +31,7 @@ class MainWindow {
     private final Stage primaryStage;
     private final Button quitButton;
     private final Button showStatsButton;
-    private Slider imageSlider = new Slider();
+    public Slider processorSlider = new Slider();
     private int pendingJobCount = 0;
     private volatile int jobsExecuted = 0;
     private volatile int imagesProcessed = 0;
@@ -42,10 +46,10 @@ class MainWindow {
     private Double updatedValue;
     public StatisticsWindow sw;
     public boolean mtcbSelected = true;
-    public Double sliderValue = 2.0;
+    public Double sliderValue = 1.0;
     public Job mainJob; 
     public ArrayList<WorkUnit> todo; 
-
+    
     /**
      * Constructor
      *
@@ -64,15 +68,16 @@ class MainWindow {
 
         // Create all widgets
 
-        imageSlider.setPrefWidth(300.0);
-        imageSlider.setMax(40.0);
-        imageSlider.setMin(2.0);
-        imageSlider.setShowTickMarks(true);
-        imageSlider.setShowTickLabels(true);
-        imageSlider.setMajorTickUnit(2.0);
-        imageSlider.setMinorTickCount(0);
-        imageSlider.setBlockIncrement(2.0);
-        imageSlider.setSnapToTicks(true);
+        processorSlider.setPrefWidth(300.0);
+        processorSlider.setMax(Runtime.getRuntime().availableProcessors());
+        processorSlider.setMin(1);
+        processorSlider.setShowTickMarks(true);
+        processorSlider.setShowTickLabels(true);
+        processorSlider.setMajorTickUnit(1);
+        processorSlider.setMinorTickCount(0);
+        processorSlider.setBlockIncrement(1);
+        processorSlider.setSnapToTicks(true);
+
 
         Button addFilesButton = new Button("Add Image Files");
         addFilesButton.setPrefHeight(buttonPreferredHeight);
@@ -126,7 +131,7 @@ class MainWindow {
             this.quitButton.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
-            this.sliderValue = this.imageSlider.getValue();
+            this.sliderValue = this.processorSlider.getValue();
 
             JobWindow jw = new JobWindow(
                 (int) (windowWidth * 0.8), (int) (windowHeight * 0.8),
@@ -148,7 +153,7 @@ class MainWindow {
 
         HBox row1 = new HBox(5);
         row1.getChildren().add(addFilesButton);
-        row1.getChildren().add(imageSlider);
+        row1.getChildren().add(processorSlider);
         layout.getChildren().add(row1);
 
         layout.getChildren().add(this.fileListWithViewPort);
@@ -177,9 +182,15 @@ class MainWindow {
 
         // Create a main job that will handle jobs from all job windows.
 
-        Job mainjob = new Job(this);
+        mainJob = new Job(this);
         // starts up a job which starts all needed threads and monitors the maindow for work. 
-        mainjob.execute();
+        mainJob.execute();
+
+
+        this.processorSlider.valueProperty().addListener(e -> {
+                this.updateProcessorThreads();
+        });
+
     }
 
 
@@ -329,5 +340,14 @@ class MainWindow {
             this.todo.add(work);
             this.todo.notifyAll();
         }
+    }
+
+    /**
+     * 
+     * Method to add work for processing. 
+     * 
+     */
+    public void updateProcessorThreads() {
+        this.mainJob.changeProcessorThreads();
     }
 }

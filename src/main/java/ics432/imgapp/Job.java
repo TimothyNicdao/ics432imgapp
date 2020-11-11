@@ -18,6 +18,8 @@ import java.nio.file.Paths;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService; 
+import java.util.concurrent.Executors; 
 
 import static javax.imageio.ImageIO.createImageOutputStream;
 
@@ -47,6 +49,9 @@ class Job {
     private long totalEndtime = 0;
     private Double totalTime = 0.0;
     private MainWindow mw;
+    private boolean changeProcessorCount = false;
+    private volatile int currentProcessorCount;
+    private ExecutorService pool = Executors.newFixedThreadPool(1);
 
     /**
      * Constructor
@@ -72,10 +77,7 @@ class Job {
             };
             Thread readThread = new Thread(readRun);
 
-            Runnable processRun = () -> {
-                processFunction();
-            };
-            Thread processThread = new Thread(processRun);
+            createProcessorThreads();
 
             Runnable writeRun = () -> {
                 writeFunction();
@@ -83,7 +85,7 @@ class Job {
             Thread writeThread = new Thread(writeRun);
 
             readThread.start();
-            processThread.start();
+            // processThread.start();
             writeThread.start();
 
     }
@@ -93,7 +95,7 @@ class Job {
 
         // set as infinite loop because this will be run as daemon thread in order to indefinitely process incoming work. 
         while(true) {
-            System.out.println("Initializing");
+            System.out.println("Reading");
             // wait for notification if there are no jobs to be done to avoid wasting cpu cycles. 
             synchronized(this.mw.todo)
             {
@@ -156,6 +158,18 @@ class Job {
 
     private void processFunction() {
         while (true) {
+            System.out.println("Processing");
+            if (changeProcessorCount){
+                if (currentProcessorCount == 1){
+                    this.changeProcessorCount = false;
+                    this.createProcessorThreads();
+
+                    break;
+                }else{
+                    currentProcessorCount--;
+                    break;
+                }
+            }
 
             WorkUnit work; 
             synchronized(this) {
@@ -255,14 +269,57 @@ class Job {
                 Platform.runLater(() -> work.jw.updateTimes(work));
             }
 
-
-
         }
         // this.totalEndtime = System.nanoTime();
         // this.totalTime = (double)(this.totalEndtime - this.totalStartTime);
 
         // Platform.runLater(() -> work.jw.jobCompleted()); need to add to read so process and write dont see poisoned
     }
+
+    /**
+     * Responsible for managing the correct number of processor threads. 
+     *
+     * @return The job outcomes, i.e., a list of ImgTransformOutcome objects
+     * (in flux if the job isn't done executing)
+     */
+
+    public void changeProcessorThreads() {
+        System.out.println("Change Called");
+        this.changeProcessorCount = true;
+        createProcessorThreads();
+    }
+
+    // /**
+    //  * Responsible for managing the correct number of processor threads. 
+    //  *
+    //  * @return The job outcomes, i.e., a list of ImgTransformOutcome objects
+    //  * (in flux if the job isn't done executing)
+    //  */
+
+    // public void poolShutDown() {
+    //     this.pool.shutdown();
+    // }
+
+    /**
+     * Responsible for managing the correct number of processor threads. 
+     *
+     * @return The job outcomes, i.e., a list of ImgTransformOutcome objects
+     * (in flux if the job isn't done executing)
+     */
+
+    public void createProcessorThreads() {
+        this.pool.shutdown();
+        System.out.println("Creating " + (int) mw.processorSlider.getValue() + " threads" );
+        this.pool = Executors.newFixedThreadPool( (int) mw.processorSlider.getValue());
+        for (int i = 0; i <= (int) mw.processorSlider.getValue(); i++){
+           Runnable processRun = () -> {
+               processFunction();
+           };
+           this.pool.execute(processRun);
+        }
+   }
+
+
 
     /**
      * Getter for job outcomes
