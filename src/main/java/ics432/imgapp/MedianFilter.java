@@ -120,6 +120,44 @@ public class MedianFilter implements BufferedImageOp {
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
             greenValues.add(bytes[2]);
+        } else if (j == 0 & i == src.getWidth()-1) {
+            //middle left
+            rgb = src.getRGB(i-1,j);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //lower left
+            rgb = src.getRGB(i-1,j+1);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //lower middle
+            rgb = src.getRGB(i,j+1);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+        } else if (i == 0 & j == src.getHeight()-1) {
+            //top middle
+            rgb = src.getRGB(i,j-1);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //top right
+            rgb = src.getRGB(i+1,j-1);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //middle right
+            rgb = src.getRGB(i+1,j);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
         } else if (j == src.getHeight()-1) {
             // top left
             rgb = src.getRGB(i-1,j-1);
@@ -151,21 +189,33 @@ public class MedianFilter implements BufferedImageOp {
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
             greenValues.add(bytes[2]);
-        } else if (i == src.getWidth()-1) {
-            //top middle
-            rgb = src.getRGB(i,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top right
-            rgb = src.getRGB(i+1,j-1);
+        } else if (j == 0) {
+            //middle left
+            rgb = src.getRGB(i-1,j);
             bytes = RGB.intToBytes(rgb);
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
             greenValues.add(bytes[2]);
             //middle right
             rgb = src.getRGB(i+1,j);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //lower left
+            rgb = src.getRGB(i-1,j+1);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //lower middle
+            rgb = src.getRGB(i,j+1);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //lower right
+            rgb = src.getRGB(i+1,j+1);
             bytes = RGB.intToBytes(rgb);
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
@@ -200,16 +250,22 @@ public class MedianFilter implements BufferedImageOp {
             bytes = RGB.intToBytes(rgb);
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
+            greenValues.add(bytes[2]);        
         } else {
-            //middle left
-            rgb = src.getRGB(i-1,j);
+            // top left
+            rgb = src.getRGB(i-1,j-1);
             bytes = RGB.intToBytes(rgb);
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
             greenValues.add(bytes[2]);
-            //middle right
-            rgb = src.getRGB(i+1,j);
+            //top middle
+            rgb = src.getRGB(i,j-1);
+            bytes = RGB.intToBytes(rgb);
+            redValues.add(bytes[0]);
+            blueValues.add(bytes[1]);
+            greenValues.add(bytes[2]);
+            //middle left
+            rgb = src.getRGB(i-1,j);
             bytes = RGB.intToBytes(rgb);
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
@@ -222,12 +278,6 @@ public class MedianFilter implements BufferedImageOp {
             greenValues.add(bytes[2]);
             //lower middle
             rgb = src.getRGB(i,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower right
-            rgb = src.getRGB(i+1,j+1);
             bytes = RGB.intToBytes(rgb);
             redValues.add(bytes[0]);
             blueValues.add(bytes[1]);
