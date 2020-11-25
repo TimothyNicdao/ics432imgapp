@@ -1,3 +1,4 @@
+package ics432.imgapp;
 public class RGB {
 
 	public static int bytesToInt(byte bytes[]) {
@@ -18,3 +19,4 @@ public class RGB {
 		return bytes;
 	}
 }
+
