@@ -31,6 +31,11 @@ public class MedianFilter implements BufferedImageOp {
         List<Byte> greenValues = new ArrayList<Byte>();
         int rgb;
         byte[] bytes;
+        rgb = src.getRGB(i,j);
+        bytes = RGB.intToBytes(rgb);
+        redValues.add(bytes[0]);
+        blueValues.add(bytes[1]);
+        greenValues.add(bytes[2]);
 
         // If not at any border
         if (i != 0 & i != src.getWidth() -1 & j != 0 & j != src.getHeight() -1) {
