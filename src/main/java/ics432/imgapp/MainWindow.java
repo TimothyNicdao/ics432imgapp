@@ -38,6 +38,7 @@ class MainWindow {
     private int jobID = 0;
     private CheckBox multithreadingCheckBox = null;
     private Slider procThreadSlider;
+    private Slider DPThreadSlider;
     protected ArrayBlockingQueue<WorkUnit> toRead;
     protected ArrayBlockingQueue<WorkUnit> toProcess;
     protected ArrayBlockingQueue<WorkUnit> toWrite;
@@ -103,6 +104,14 @@ class MainWindow {
         this.procThreadSlider.setMinorTickCount(0);
         this.procThreadSlider.setShowTickLabels(true);
         this.procThreadSlider.setSnapToTicks(true);
+
+        this.DPThreadSlider = new Slider(1, Runtime.getRuntime().availableProcessors(), 1);
+        this.DPThreadSlider.setPrefWidth(350);
+        this.DPThreadSlider.setBlockIncrement(1);
+        this.DPThreadSlider.setMajorTickUnit(1);
+        this.DPThreadSlider.setMinorTickCount(0);
+        this.DPThreadSlider.setShowTickLabels(true);
+        this.DPThreadSlider.setSnapToTicks(true);
 
         Button createJobButton = new Button("Create Job");
         createJobButton.setPrefHeight(buttonPreferredHeight);
@@ -201,6 +210,8 @@ class MainWindow {
         toprow.getChildren().add(viewStatsButton);
         toprow.getChildren().add(new Label("#Processor Threads"));
         toprow.getChildren().add(procThreadSlider);
+        toprow.getChildren().add(new Label("#DP Threads"));
+        toprow.getChildren().add(DPThreadSlider);
         layout.getChildren().add(toprow);
 
         layout.getChildren().add(this.fileListWithViewPort);
