@@ -372,7 +372,7 @@ public class DPMedianFilter implements BufferedImageOp {
             }
 
             for (int i = 0; i < this.src.getWidth(); i++) {
-                for (int j = start; j < end; j++) {
+                for (int j = start; j <= end; j++) {
                         this.dpmf.outputImage.setRGB(i, j, findMedian(src, i, j));
                 }
             }
