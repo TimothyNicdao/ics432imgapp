@@ -368,6 +368,7 @@ class MainWindow {
 
                 if (wu.end == true) {
                     try {
+                        wu.processImage();
                         this.mw.toWrite.put(wu);
                     } catch (InterruptedException e) {
                         //  We're canceled
