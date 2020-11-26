@@ -20,6 +20,8 @@ public class ICS432ImgApp extends Application {
      */
     public static ArrayList<ImgTransform> filters;
 
+    public static int dpThreads = 1;
+
 
     /**
      * The execution statistics
@@ -36,11 +38,13 @@ public class ICS432ImgApp extends Application {
         of.setRange(4);
         ImgTransform oil4Filter = new ImgTransform("Oil4", of);
         ImgTransform medianFilter = new ImgTransform("Median", new MedianFilter());
+        ImgTransform dpMedianFilter = new ImgTransform("DP_Median", new DPMedianFilter(dpThreads));
         filters = new ArrayList<>();
         filters.add(invertFilter);
         filters.add(solarizeFilter);
         filters.add(oil4Filter);
         filters.add(medianFilter);
+        filters.add(dpMedianFilter);
 
         // Statistics
         statistics = new Statistics();
@@ -73,6 +77,10 @@ public class ICS432ImgApp extends Application {
             System.err.println("Exception in agent: " + t);
         }
         return memory_usage / (1000  * 1000);
+    }
+
+    public static void updateDPThreads(int newAmount) {
+        dpThreads = newAmount;
     }
 
 }

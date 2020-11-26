@@ -46,6 +46,7 @@ class MainWindow {
     private ProcessorThread processorThread;
     private WriterThread writerThread;
     private int procThreadAmount = 1;
+    public int dpThreadAmount = 1;
     private ArrayList<ProcessorThread> procThreadArrList;
 
     /**
@@ -159,6 +160,7 @@ class MainWindow {
         createJobButton.setOnAction(e -> {
             this.quitButton.setDisable(true);
             this.procThreadSlider.setDisable(true);
+            this.DPThreadSlider.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
             if (this.procThreadAmount != this.procThreadSlider.getValue()) {
@@ -195,6 +197,7 @@ class MainWindow {
                 if (pendingJobCount == 0) {
                     this.quitButton.setDisable(false);
                     this.procThreadSlider.setDisable(false);
+                    this.DPThreadSlider.setDisable(false);
                 }
             });
         });

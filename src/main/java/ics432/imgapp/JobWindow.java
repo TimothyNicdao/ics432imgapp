@@ -101,6 +101,7 @@ class JobWindow extends Stage {
         imgTransformList = new ComboBox<>();
         imgTransformList.setId("imgTransformList");  // For TestFX
 
+        ICS432ImgApp.updateDPThreads(this.mw.dpThreadAmount);
         imgTransformList.setItems(FXCollections.observableArrayList(
                 ICS432ImgApp.filters
         ));
