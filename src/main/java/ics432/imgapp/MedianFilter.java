@@ -1,318 +1,65 @@
 package ics432.imgapp;
 
-import java.io.*;
-import java.awt.image.*;
-import javax.imageio.*;
-import java.awt.image.BufferedImage;
+import java.awt.*;
 import java.awt.geom.*;
-import java.awt.RenderingHints;
-import java.util.*;
+import java.awt.image.*;
+import java.util.ArrayList;
 import java.util.Collections;
-import ics432.imgapp.RGB;
 
 public class MedianFilter implements BufferedImageOp {
-    
-    public BufferedImage filter(BufferedImage src, BufferedImage dst) {
-        BufferedImage outputImage = new BufferedImage(
-            src.getWidth(), src.getHeight(),
-            src.getType());
-        for (int i = 0; i < src.getWidth(); i++) {
-			for (int j = 0; j < src.getHeight(); j++) {
-                outputImage.setRGB(i, j, findMedian(src, i, j));
+  @Override
+  public BufferedImage filter(BufferedImage src, BufferedImage dst) {
+    int max_X = src.getWidth();
+    int max_Y = src.getHeight();
+
+    for (int x = 0; x < max_X; x++) {
+
+      for (int y = 0; y < max_Y; y++) {
+        ArrayList<Byte> redValues = new ArrayList<>();
+        ArrayList<Byte> greenValues = new ArrayList<>();
+        ArrayList<Byte> blueValues = new ArrayList<>();
+
+        for (int i = x - 1; i < x + 2; i++) {
+
+          for (int j = y - 1; j < y + 2; j++) {
+            if((i != -1) && (j != -1) && (i != max_X ) && (j != max_Y)) {
+                redValues.add(RGB.intToBytes(src.getRGB(i, j))[0]);
+                greenValues.add(RGB.intToBytes(src.getRGB(i, j))[1]);
+                blueValues.add(RGB.intToBytes(src.getRGB(i, j))[2]);
             }
-        }
-        System.out.println("exited for loops");
-        return outputImage;
-    }
-
-    public int findMedian(BufferedImage src, int i, int j) {
-        List<Byte> redValues = new ArrayList<Byte>();
-        List<Byte> blueValues = new ArrayList<Byte>();
-        List<Byte> greenValues = new ArrayList<Byte>();
-        int rgb;
-        byte[] bytes;
-        rgb = src.getRGB(i,j);
-        bytes = RGB.intToBytes(rgb);
-        redValues.add(bytes[0]);
-        blueValues.add(bytes[1]);
-        greenValues.add(bytes[2]);
-
-        // If not at any border
-        if (i != 0 & i != src.getWidth() -1 & j != 0 & j != src.getHeight() -1) {
-            // top left
-            rgb = src.getRGB(i-1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top middle
-            rgb = src.getRGB(i,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top right
-            rgb = src.getRGB(i+1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle left
-            rgb = src.getRGB(i-1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle right
-            rgb = src.getRGB(i+1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower left
-            rgb = src.getRGB(i-1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower middle
-            rgb = src.getRGB(i,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower right
-            rgb = src.getRGB(i+1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-        } else if (i == 0 && j == 0) {
-            //lower middle
-            rgb = src.getRGB(i,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower right
-            rgb = src.getRGB(i+1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle right
-            rgb = src.getRGB(i+1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-        } else if (i == src.getWidth()-1 & j == src.getHeight()-1) {
-            // top left
-            rgb = src.getRGB(i-1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top middle
-            rgb = src.getRGB(i,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle left
-            rgb = src.getRGB(i-1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-        } else if (j == 0 & i == src.getWidth()-1) {
-            //middle left
-            rgb = src.getRGB(i-1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower left
-            rgb = src.getRGB(i-1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower middle
-            rgb = src.getRGB(i,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-        } else if (i == 0 & j == src.getHeight()-1) {
-            //top middle
-            rgb = src.getRGB(i,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top right
-            rgb = src.getRGB(i+1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle right
-            rgb = src.getRGB(i+1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-        } else if (j == src.getHeight()-1) {
-            // top left
-            rgb = src.getRGB(i-1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top middle
-            rgb = src.getRGB(i,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top right
-            rgb = src.getRGB(i+1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle left
-            rgb = src.getRGB(i-1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle right
-            rgb = src.getRGB(i+1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-        } else if (j == 0) {
-            //middle left
-            rgb = src.getRGB(i-1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle right
-            rgb = src.getRGB(i+1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower left
-            rgb = src.getRGB(i-1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower middle
-            rgb = src.getRGB(i,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower right
-            rgb = src.getRGB(i+1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-        } else if (i == 0) {
-            //top middle
-            rgb = src.getRGB(i,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top right
-            rgb = src.getRGB(i+1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower middle
-            rgb = src.getRGB(i,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower right
-            rgb = src.getRGB(i+1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle right
-            rgb = src.getRGB(i+1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);        
-        } else {
-            // top left
-            rgb = src.getRGB(i-1,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //top middle
-            rgb = src.getRGB(i,j-1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //middle left
-            rgb = src.getRGB(i-1,j);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower left
-            rgb = src.getRGB(i-1,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
-            //lower middle
-            rgb = src.getRGB(i,j+1);
-            bytes = RGB.intToBytes(rgb);
-            redValues.add(bytes[0]);
-            blueValues.add(bytes[1]);
-            greenValues.add(bytes[2]);
+          }
         }
         Collections.sort(redValues);
-        Collections.sort(blueValues);
         Collections.sort(greenValues);
-        int halfway = redValues.size()/2;
-        bytes[0] = redValues.get(halfway);
-        bytes[1] = blueValues.get(halfway);
-        bytes[2] = greenValues.get(halfway);
-        return RGB.bytesToInt(bytes);
+        Collections.sort(blueValues);
+
+        byte[] bytes = {redValues.get(redValues.size()/2),greenValues.get(greenValues.size()/2), blueValues.get(blueValues.size()/2)};
+        src.setRGB(x, y, RGB.bytesToInt(bytes));
+      }
     }
 
-    public Rectangle2D getBounds2D(BufferedImage src) {
-        return null;
-    }
+    dst = src;
 
-    public BufferedImage createCompatibleDestImage(BufferedImage src,
-    ColorModel destCM) {
-        return src;
-    }
+    return dst;
+  }
 
-    public Point2D getPoint2D(Point2D srcPt,
-    Point2D dstPt) {
-        return srcPt;
-    }
+  @Override
+  public Rectangle2D getBounds2D(BufferedImage src) {
+    return null;
+  }
 
-    public RenderingHints getRenderingHints() {
-        return null;
-    }
+  @Override
+  public BufferedImage createCompatibleDestImage(BufferedImage src, ColorModel destCM) {
+    return null;
+  }
+
+  @Override
+  public Point2D getPoint2D(Point2D srcPt, Point2D dstPt) {
+    return null;
+  }
+
+  @Override
+  public RenderingHints getRenderingHints() {
+    return null;
+  }
 }
