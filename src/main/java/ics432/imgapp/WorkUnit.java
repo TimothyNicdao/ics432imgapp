@@ -31,9 +31,11 @@ public class WorkUnit {
     public BufferedImage processedImage;
     public Job givenJob;
     public boolean end;
+    public MainWindow mw;
+    public static int dpThreads = 1;
 
 
-    public WorkUnit(ImgTransform imgTransform, Path inputFile, Path targetDir, Job givenJob, boolean end) {
+    public WorkUnit(ImgTransform imgTransform, Path inputFile, Path targetDir, Job givenJob, boolean end, MainWindow mw) {
         this.imgTransform = imgTransform;
         this.inputFile = inputFile;
         this.targetDir = targetDir;
@@ -42,6 +44,7 @@ public class WorkUnit {
         this.processedImage = null;
         this.givenJob = givenJob;
         this.end = end;
+        this.mw = mw;
     }
 
     public void readInputFile() throws IOException {
@@ -70,8 +73,10 @@ public class WorkUnit {
                 OilFilter of = new OilFilter();
                 of.setRange(4);
                 newImgTransform = new ImgTransform("Oil4", of);
-            } else {
+            } else if (index == 3) {
                 newImgTransform = new ImgTransform("Median", new MedianFilter());
+            } else {
+                newImgTransform = new ImgTransform("DP_Median", new DPMedianFilter(this.mw.dpThreadAmount));
             }
                 
             this.processedImage = newImgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(this.inputImage, null), null);
@@ -94,6 +99,9 @@ public class WorkUnit {
             }
             this.processedImage = null; // freeing memory
         }
+    }
+    public static void updateDPThreads(int newAmount) {
+        dpThreads = newAmount;
     }
 
 }

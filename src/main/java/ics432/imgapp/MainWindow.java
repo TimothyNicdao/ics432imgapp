@@ -163,6 +163,7 @@ class MainWindow {
             this.DPThreadSlider.setDisable(true);
             this.pendingJobCount += 1;
             this.jobID += 1;
+            this.dpThreadAmount = (int) this.DPThreadSlider.getValue();
             if (this.procThreadAmount != this.procThreadSlider.getValue()) {
                 if (this.procThreadAmount < this.procThreadSlider.getValue()) {
                     while (this.procThreadAmount != this.procThreadSlider.getValue()) {

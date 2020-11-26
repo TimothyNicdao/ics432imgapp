@@ -44,10 +44,10 @@ public abstract class Job {
         // Populate the toRead buffer
         try {
             for (Path inputFile : this.inputFiles) {
-                WorkUnit wu = new WorkUnit(this.imgTransform, inputFile, this.targetDir, this, false);
+                WorkUnit wu = new WorkUnit(this.imgTransform, inputFile, this.targetDir, this, false, this.mw);
                 this.mw.toRead.put(wu);
             }
-            WorkUnit jobEnd = new WorkUnit(this.imgTransform, this.inputFiles.get(0), this.targetDir, this, true);
+            WorkUnit jobEnd = new WorkUnit(this.imgTransform, this.inputFiles.get(0), this.targetDir, this, true,this.mw);
             this.mw.toRead.put(jobEnd);
             // Put a the "the end" work unit to signal the end of computing
         } catch (InterruptedException ignore) {

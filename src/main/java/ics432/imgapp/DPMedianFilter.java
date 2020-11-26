@@ -12,25 +12,42 @@ import ics432.imgapp.RGB;
 
 public class DPMedianFilter implements BufferedImageOp {
 
+    public int currentThreads = 0;
     public int dpThreads = 1;
+    public BufferedImage outputImage;
+    public ArrayList<FilterThread> filterThreadList = new ArrayList();;
 
     public DPMedianFilter(int amount) {
         this.dpThreads = amount;
     }
     
     public BufferedImage filter(BufferedImage src, BufferedImage dst) {
-        BufferedImage outputImage = new BufferedImage(
-            src.getWidth(), src.getHeight(),
-            src.getType());
 
-        
-        for (int i = 0; i < src.getWidth(); i++) {
-			for (int j = 0; j < src.getHeight(); j++) {
-                outputImage.setRGB(i, j, findMedian(src, i, j));
+        this.outputImage = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());
+        if (this.currentThreads != this.dpThreads) {
+            while (this.currentThreads != this.dpThreads) {
+                this.currentThreads++;
+                FilterThread newThread = new FilterThread(src, this.currentThreads, this.dpThreads, this);
+                this.filterThreadList.add(newThread);
+                newThread.start();
             }
+            while (!filterThreadList.isEmpty()) {
+                try { 
+                    filterThreadList.get(0).join(); 
+                    filterThreadList.remove(0);
+                } 
+                catch (Exception e) { 
+                } 
+            }
+        } else {
+            for (int i = 0; i < src.getWidth(); i++) {
+			    for (int j = 0; j < src.getHeight(); j++) {
+                    this.outputImage.setRGB(i, j, findMedian(src, i, j));
+                }
+            }   
         }
-        System.out.println("exited for loops");
         return outputImage;
+        
     }
 
     public int findMedian(BufferedImage src, int i, int j) {
@@ -322,6 +339,45 @@ public class DPMedianFilter implements BufferedImageOp {
 
     public RenderingHints getRenderingHints() {
         return null;
+    }
+
+    /**
+     * Nested ReaderThread class
+     */
+    private class FilterThread extends Thread {
+
+        public BufferedImage src;
+        public DPMedianFilter dpmf;
+        public int threadNumber;
+        public int totalThreads;
+        public FilterThread(BufferedImage src, int threadNumber, int totalThreads, DPMedianFilter dpmf) {
+            this.src = src;
+            this.threadNumber = threadNumber;
+            this.totalThreads = totalThreads;
+            this.dpmf = dpmf;
+        }
+
+        @Override
+        public void run() {
+
+            int threadBlock = (src.getHeight()-1)/totalThreads;
+            int start;
+            int end;
+            if (threadNumber == totalThreads) {
+                start = threadBlock*(threadNumber-1);
+                end = this.src.getHeight()-1;
+            } else {
+                start = threadBlock*(threadNumber-1);
+                end = threadBlock*(threadNumber)-1;
+            }
+
+            for (int i = 0; i < this.src.getWidth(); i++) {
+                for (int j = start; j < end; j++) {
+                        this.dpmf.outputImage.setRGB(i, j, findMedian(src, i, j));
+                }
+            }
+            
+        }
     }
 }
 
