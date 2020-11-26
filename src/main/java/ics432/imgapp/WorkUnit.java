@@ -66,10 +66,12 @@ public class WorkUnit {
                 newImgTransform = new ImgTransform("Invert", new InvertFilter());
             } else if (index == 1) {
                 newImgTransform = new ImgTransform("Solarize", new SolarizeFilter());
-            } else {
+            } else if (index == 2) {
                 OilFilter of = new OilFilter();
                 of.setRange(4);
                 newImgTransform = new ImgTransform("Oil4", of);
+            } else {
+              newImgTransform = new ImgTransform("Median", new MedianFilter());
             }
 
             this.processedImage = newImgTransform.getBufferedImageOp().filter(SwingFXUtils.fromFXImage(this.inputImage, null), null);

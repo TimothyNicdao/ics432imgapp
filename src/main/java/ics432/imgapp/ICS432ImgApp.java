@@ -35,10 +35,12 @@ public class ICS432ImgApp extends Application {
         OilFilter of = new OilFilter();
         of.setRange(4);
         ImgTransform oil4Filter = new ImgTransform("Oil4", of);
+        ImgTransform medianFilter = new ImgTransform("Median", new MedianFilter());
         filters = new ArrayList<>();
         filters.add(invertFilter);
         filters.add(solarizeFilter);
         filters.add(oil4Filter);
+        filters.add(medianFilter);
 
         // Statistics
         statistics = new Statistics();
